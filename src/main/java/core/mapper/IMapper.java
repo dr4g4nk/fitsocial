@@ -1,13 +1,13 @@
-package org.unibl.etf.fitsocial.mapper.base;
+package core.mapper;
 
 import org.mapstruct.BeanMapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.unibl.etf.fitsocial.dto.base.IBasicDto;
-import org.unibl.etf.fitsocial.dto.base.ICreateDto;
-import org.unibl.etf.fitsocial.dto.base.IListDto;
-import org.unibl.etf.fitsocial.dto.base.IUpdateDto;
+import core.dto.IBasicDto;
+import core.dto.ICreateDto;
+import core.dto.IListDto;
+import core.dto.IUpdateDto;
 
 public interface IMapper<T, Dto extends IBasicDto, ListDto extends IListDto, UpdateDto extends IUpdateDto, CreateDto extends ICreateDto> {
     @Named("detailed")

@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.util;
+package org.unibl.etf.fitsocial.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

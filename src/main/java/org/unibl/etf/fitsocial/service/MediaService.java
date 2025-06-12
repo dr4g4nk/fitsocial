@@ -2,16 +2,26 @@ package org.unibl.etf.fitsocial.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.unibl.etf.fitsocial.dto.PostMediaDto;
-import org.unibl.etf.fitsocial.entity.PostMedia;
-import org.unibl.etf.fitsocial.mapper.base.IMapper;
-import org.unibl.etf.fitsocial.repository.base.BaseSoftDeletableRepository;
-import org.unibl.etf.fitsocial.service.base.BaseSoftDeletableServiceImpl;
+import org.unibl.etf.fitsocial.dto.MediaDto;
+import org.unibl.etf.fitsocial.entity.Media;
+import core.mapper.IMapper;
+import core.repository.BaseSoftDeletableRepository;
+import core.service.BaseSoftDeletableServiceImpl;
 
 @Service
 @Transactional
-public class PostMediaService extends BaseSoftDeletableServiceImpl<PostMedia, PostMediaDto, PostMediaDto, PostMediaDto, PostMediaDto, Long> {
-    public PostMediaService(BaseSoftDeletableRepository<PostMedia, Long> repository, IMapper<PostMedia, PostMediaDto, PostMediaDto, PostMediaDto, PostMediaDto> mapper) {
+public class MediaService extends BaseSoftDeletableServiceImpl<
+    Media,
+    MediaDto,
+    MediaDto.List,
+    MediaDto.Update,
+    MediaDto.Create,
+    Long
+> {
+    public MediaService(
+        BaseSoftDeletableRepository<Media, Long> repository,
+        IMapper<Media, MediaDto, MediaDto.List, MediaDto.Update, MediaDto.Create> mapper
+    ) {
         super(repository, mapper);
     }
 }

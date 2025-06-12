@@ -6,14 +6,14 @@ import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.unibl.etf.fitsocial.entity.base.SoftDeletableEntity;
+import core.entity.SoftDeletableEntity;
 
 import java.time.Instant;
 
 @Entity
-@Table(name = "post_comments", schema = "feed")
+@Table(name = "comment", schema = "feed")
 @EntityListeners(AuditingEntityListener.class)
-public class PostComment extends SoftDeletableEntity<Long> {
+public class Comment extends SoftDeletableEntity<Long> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

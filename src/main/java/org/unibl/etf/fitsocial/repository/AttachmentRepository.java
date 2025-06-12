@@ -1,4 +1,7 @@
 package org.unibl.etf.fitsocial.repository;
 
-public interface AttachmentRepository extends org.unibl.etf.fitsocial.repository.base.BaseSoftDeletableRepository<org.unibl.etf.fitsocial.entity.Attachment, java.lang.Long> {
-  }
+import org.unibl.etf.fitsocial.entity.Attachment;
+import core.repository.BaseSoftDeletableRepository;
+
+public interface AttachmentRepository extends BaseSoftDeletableRepository<Attachment, Long> {
+}

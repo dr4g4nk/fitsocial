@@ -1,6 +1,4 @@
-package org.unibl.etf.fitsocial.entity.base;
-
-import jakarta.persistence.Column;
+package core.entity;
 
 import java.io.Serializable;
 import java.time.Instant;

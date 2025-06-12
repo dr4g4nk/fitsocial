@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.entity.base;
+package core.entity;
 
 import java.io.Serializable;
 

@@ -1,7 +1,7 @@
-package org.unibl.etf.fitsocial.service.base;
+package core.service;
 import org.springframework.data.domain.Pageable;
-import org.unibl.etf.fitsocial.dto.base.PageResponseDto;
-import org.unibl.etf.fitsocial.dto.base.ResponseDto;
+import core.dto.PageResponseDto;
+import core.dto.ResponseDto;
 
 public interface IBaseService<T , Dto, ListDto, UpdateDto, CreateDto, ID> {
     ResponseDto<PageResponseDto<ListDto>, T> findAll(Pageable pageable);

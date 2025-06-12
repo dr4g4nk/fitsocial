@@ -2,14 +2,22 @@ package org.unibl.etf.fitsocial.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.unibl.etf.fitsocial.controller.base.BaseController;
-import org.unibl.etf.fitsocial.dto.UserDto;
-import org.unibl.etf.fitsocial.service.UserService;
+import core.controller.BaseController;
+import core.service. BaseSoftDeletableServiceImpl;
+import org.unibl.etf.fitsocial.entity.Activity;
+import org.unibl.etf.fitsocial.dto.ActivityDto;
 
 @RestController
-@RequestMapping("/api/users")
-public class UserController extends BaseController<UserDto, Long> {
-    public UserController(UserService service) {
+@RequestMapping("/api/activity")
+public class ActivityController extends BaseController<
+    Activity,
+    ActivityDto,
+    ActivityDto.List,
+    ActivityDto.Update,
+    ActivityDto.Create,
+    Long
+> {
+    public ActivityController(BaseSoftDeletableServiceImpl<Activity, ActivityDto, ActivityDto.List, ActivityDto.Update, ActivityDto.Create, Long> service) {
         super(service);
     }
 }

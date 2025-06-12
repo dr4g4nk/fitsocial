@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.jwt;
+package core.util;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

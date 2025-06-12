@@ -1,16 +1,23 @@
 package org.unibl.etf.fitsocial.controller;
 
-
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.unibl.etf.fitsocial.controller.base.BaseController;
-import org.unibl.etf.fitsocial.dto.PostMediaDto;
-import org.unibl.etf.fitsocial.service.PostMediaService;
+import core.controller.BaseController;
+import core.service. BaseSoftDeletableServiceImpl;
+import org.unibl.etf.fitsocial.entity.Media;
+import org.unibl.etf.fitsocial.dto.MediaDto;
 
 @RestController
-@RequestMapping("/api/postMedias")
-public class PostMediaController extends BaseController<PostMediaDto,PostMediaDto,PostMediaDto,PostMediaDto, Long> {
-    public PostMediaController(PostMediaService service) {
+@RequestMapping("/api/media")
+public class MediaController extends BaseController<
+    Media,
+    MediaDto,
+    MediaDto.List,
+    MediaDto.Update,
+    MediaDto.Create,
+    Long
+> {
+    public MediaController(BaseSoftDeletableServiceImpl<Media, MediaDto, MediaDto.List, MediaDto.Update, MediaDto.Create, Long> service) {
         super(service);
     }
 }

@@ -1,4 +1,7 @@
 package org.unibl.etf.fitsocial.repository;
 
-public interface ActivityRepository extends org.springframework.data.jpa.repository.JpaRepository<org.unibl.etf.fitsocial.entity.Activity, java.lang.Long> {
-  }
+import org.unibl.etf.fitsocial.entity.Activity;
+import core.repository.BaseSoftDeletableRepository;
+
+public interface ActivityRepository extends BaseSoftDeletableRepository<Activity, Long> {
+}

@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.dto.base;
+package core.dto;
 
 import org.springframework.data.domain.Page;
 

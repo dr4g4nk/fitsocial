@@ -1,4 +1,4 @@
-package core.cotroller;
+package core.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;

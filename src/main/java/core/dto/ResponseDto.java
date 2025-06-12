@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.dto.base;
+package core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.http.HttpStatus;

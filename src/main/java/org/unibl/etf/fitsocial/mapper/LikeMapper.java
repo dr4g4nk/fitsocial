@@ -1,16 +1,18 @@
 package org.unibl.etf.fitsocial.mapper;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.unibl.etf.fitsocial.dto.PostLikeDto;
-import org.unibl.etf.fitsocial.entity.PostLike;
-import org.unibl.etf.fitsocial.mapper.base.IMapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+import org.unibl.etf.fitsocial.dto.LikeDto;
+import org.unibl.etf.fitsocial.entity.Like;
+import core.mapper.IMapper;
 
-@Mapper(componentModel = "spring")
-public interface PostLikeMapper extends IMapper<PostLike, PostLikeDto.GetAll, PostLikeDto, PostLikeDto, PostLikeDto.Create> {
-
-    @Override
-    @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "postId", source = "post.id")
-    PostLikeDto.GetAll toGetAllDto(PostLike entity);
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+public interface LikeMapper extends IMapper<
+    Like,
+    LikeDto,
+    LikeDto.List,
+    LikeDto.Update,
+    LikeDto.Create
+> {
 }

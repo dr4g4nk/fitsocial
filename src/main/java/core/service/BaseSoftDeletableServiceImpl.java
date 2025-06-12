@@ -1,12 +1,11 @@
-package org.unibl.etf.fitsocial.service.base;
+package core.service;
 
+import core.dto.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.unibl.etf.fitsocial.dto.base.*;
-import org.unibl.etf.fitsocial.entity.base.SoftDeletableEntity;
-import org.unibl.etf.fitsocial.mapper.base.IMapper;
-import org.unibl.etf.fitsocial.repository.base.BaseSoftDeletableRepository;
-
+import core.entity.SoftDeletableEntity;
+import core.mapper.IMapper;
+import core.repository.BaseSoftDeletableRepository;
 import java.io.Serializable;
 
 public abstract class BaseSoftDeletableServiceImpl<T extends SoftDeletableEntity<ID>, Dto extends IBasicDto, ListDto extends IListDto, UpdateDto extends IUpdateDto, CreateDto extends ICreateDto, ID extends Serializable> extends BaseServiceImpl<T, Dto, ListDto, UpdateDto, CreateDto, ID> {
@@ -18,13 +17,15 @@ public abstract class BaseSoftDeletableServiceImpl<T extends SoftDeletableEntity
         this.repository = repository;
     }
 
-    protected Specification<T> getSpecification(ListDto getAllDto) {
-        return null;
+    protected Specification<T> specification = (root, query, builder) -> builder.isNull(root.get("deletedAt"));
+
+    protected Specification<T> getSpecification(T  entity) {
+        return (root, query, builder) -> null;
     }
 
     @Override
     public ResponseDto<PageResponseDto<ListDto>, T> findAll(Pageable pageable) {
-        return new ResponseDto<PageResponseDto<ListDto>, T>(new PageResponseDto<ListDto>(repository.findAllByDeletedAtIsNull(pageable).map(mapper::toListDto)));
+        return new ResponseDto<PageResponseDto<ListDto>, T>(new PageResponseDto<ListDto>(repository.findAll(pageable).map(mapper::toListDto)));
     }
 
     @Override

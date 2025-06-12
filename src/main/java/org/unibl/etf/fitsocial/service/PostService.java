@@ -1,29 +1,101 @@
 package org.unibl.etf.fitsocial.service;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import core.dto.PageResponseDto;
+import core.dto.ResponseDto;
+import core.util.CurrentUserDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.unibl.etf.fitsocial.dto.UserDto;
+import org.springframework.transaction.NoTransactionException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.unibl.etf.fitsocial.dto.CommentDto;
+import org.unibl.etf.fitsocial.dto.PostDto;
+import org.unibl.etf.fitsocial.dto.FeedItemDto;
+import org.unibl.etf.fitsocial.entity.Post;
+import org.unibl.etf.fitsocial.entity.Comment;
 import org.unibl.etf.fitsocial.entity.User;
-import org.unibl.etf.fitsocial.service.base.BaseServiceImpl;
-import org.unibl.etf.fitsocial.service.base.IBaseService;
+import org.unibl.etf.fitsocial.mapper.CommentMapper;
+import core.mapper.IMapper;
+import org.unibl.etf.fitsocial.mapper.UserMapper;
+import org.unibl.etf.fitsocial.repository.PostRepository;
+import core.service.BaseSoftDeletableServiceImpl;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class UserService extends BaseServiceImpl<User, UserDto, Long> {
-    public UserService(JpaRepository<User, Long> repository) {
-        super(repository);
+@Transactional
+public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, PostDto.List, PostDto.Update, PostDto.Create, Long> {
+
+    protected PostRepository postRepository;
+    protected CommentMapper CommentMapper;
+    protected UserMapper userMapper;
+
+    public PostService(PostRepository postRepository, IMapper<Post, PostDto, PostDto.List, PostDto.Update, PostDto.Create> mapper, CommentMapper CommentMapper, UserMapper userMapper) {
+        super(postRepository, mapper);
+        this.postRepository = postRepository;
+        this.CommentMapper = CommentMapper;
+        this.userMapper = userMapper;
+    }
+
+    public ResponseDto<PageResponseDto<PostDto.List>, Post> findPublicPostsWithLikesAndComments(Pageable pageable, boolean onlyPublic) {
+        // 1. Povuci postove sa brojem lajkova
+        var rawPosts = postRepository.findPublicPostsWithLikes(onlyPublic, pageable);
+        List<Long> postIds = rawPosts.stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+
+        // 2. Povuci komentare za te postove
+        List<Comment> rawComments = postRepository.findCommentsForPosts(postIds);
+
+        // 3. Grupisi komentare po postId-u, uzmi samo 3 najnovija
+        Map<Long, List<CommentDto.List>> commentsByPostId = rawComments.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getPost().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> list.stream()
+                                        .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
+                                        .limit(3)
+                                        .map(c -> CommentMapper.toListDto(c))
+                                        .toList()
+                        )
+                ));
+
+        // 4. Mapiraj rezultate u PostDto
+        var results = rawPosts
+                .map(p -> new PostDto.List(p.getId(), p.getContent(), userMapper.toDto(p.getUser()), p.getCreatedAt(), p.getIsPublic(), p.getLikeCount(), commentsByPostId.getOrDefault(p.getId(), Collections.emptyList())));
+
+
+        // 6. Vrati kao Page
+        return new ResponseDto<PageResponseDto<PostDto.List>, Post>(new PageResponseDto<PostDto.List>(results));
     }
 
     @Override
-    protected User toEntity(UserDto dto) {
-        User user = new User();
-        user.setId(dto.id());
-        user.setUsername(dto.username());
-        user.setEmail(dto.email());
-        return user;
-    }
+    public ResponseDto<PostDto, Post> save(PostDto.Create dto) {
+        ResponseDto<PostDto, Post> response;
+        try {
+            var userDetails = getUserDetails();
+            var user = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
+            var entity = mapper.fromCreateDto(dto);
+            entity.setUser(user);
+            var savedEntity = postRepository.save(entity);
 
-    @Override
-    protected UserDto toDto(User user) {
-        return new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getDateOfBirth());
+            response = new ResponseDto<PostDto, Post>(mapper.toDto(savedEntity), savedEntity);
+
+
+
+
+        } catch (Exception e) {
+            response = new ResponseDto<>(e.getMessage());
+            try {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            } catch (NoTransactionException noTransactionException) {
+                response.setMessage(response.getMessage() + " No transaction available");
+            }
+        }
+        return response;
     }
 }

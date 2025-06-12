@@ -1,4 +1,4 @@
-package org.unibl.etf.fitsocial.dto.base;
+package core.dto;
 
 import java.io.Serializable;
 

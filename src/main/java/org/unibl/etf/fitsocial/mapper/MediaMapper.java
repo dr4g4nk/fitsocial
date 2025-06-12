@@ -1,10 +1,18 @@
 package org.unibl.etf.fitsocial.mapper;
 
 import org.mapstruct.Mapper;
-import org.unibl.etf.fitsocial.dto.PostMediaDto;
-import org.unibl.etf.fitsocial.entity.PostMedia;
-import org.unibl.etf.fitsocial.mapper.base.IMapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+import org.unibl.etf.fitsocial.dto.MediaDto;
+import org.unibl.etf.fitsocial.entity.Media;
+import core.mapper.IMapper;
 
-@Mapper(componentModel = "spring")
-public interface PostMediaMapper extends IMapper<PostMedia, PostMediaDto, PostMediaDto, PostMediaDto, PostMediaDto> {
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+public interface MediaMapper extends IMapper<
+    Media,
+    MediaDto,
+    MediaDto.List,
+    MediaDto.Update,
+    MediaDto.Create
+> {
 }

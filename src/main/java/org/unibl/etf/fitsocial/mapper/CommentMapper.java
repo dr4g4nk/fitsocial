@@ -2,30 +2,27 @@ package org.unibl.etf.fitsocial.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.unibl.etf.fitsocial.dto.PostCommentDto;
-import org.unibl.etf.fitsocial.entity.PostComment;
-import org.unibl.etf.fitsocial.mapper.base.IMapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+import org.unibl.etf.fitsocial.dto.CommentDto;
+import org.unibl.etf.fitsocial.entity.Comment;
+import core.mapper.IMapper;
 
-@Mapper(componentModel = "spring")
-public interface PostCommentMapper extends IMapper<PostComment, PostCommentDto,PostCommentDto,PostCommentDto.Update, PostCommentDto.Create> {
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+public interface CommentMapper extends IMapper<Comment, CommentDto,CommentDto.List,CommentDto.Update, CommentDto.Create> {
     @Override
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "postId", source = "post.id")
-    PostCommentDto toGetAllDto(PostComment entity);
+    CommentDto.List toListDto(Comment entity);
 
     @Override
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "postId", source = "post.id")
-    PostCommentDto toGetByIdDto(PostComment entity);
+    CommentDto toDto(Comment entity);
 
     @Override
     @Mapping(target = "user.id", source = "userId")
     @Mapping(target = "post.id", source = "postId")
-    PostComment updateDto2Entity(PostCommentDto.Update update);
-
-    @Override
-    @Mapping(target = "user.id", source = "userId")
-    @Mapping(target = "post.id", source = "postId")
-    PostComment createDto2Entity(PostCommentDto.Create create);
+    Comment fromCreateDto(CommentDto.Create create);
 
 }

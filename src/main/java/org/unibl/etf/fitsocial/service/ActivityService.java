@@ -1,29 +1,27 @@
 package org.unibl.etf.fitsocial.service;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
-import org.unibl.etf.fitsocial.dto.UserDto;
-import org.unibl.etf.fitsocial.entity.User;
-import org.unibl.etf.fitsocial.service.base.BaseServiceImpl;
-import org.unibl.etf.fitsocial.service.base.IBaseService;
+import org.springframework.transaction.annotation.Transactional;
+import org.unibl.etf.fitsocial.dto.ActivityDto;
+import org.unibl.etf.fitsocial.entity.Activity;
+import core.mapper.IMapper;
+import core.repository.BaseSoftDeletableRepository;
+import core.service.BaseSoftDeletableServiceImpl;
 
 @Service
-public class UserService extends BaseServiceImpl<User, UserDto, Long> {
-    public UserService(JpaRepository<User, Long> repository) {
-        super(repository);
-    }
-
-    @Override
-    protected User toEntity(UserDto dto) {
-        User user = new User();
-        user.setId(dto.id());
-        user.setUsername(dto.username());
-        user.setEmail(dto.email());
-        return user;
-    }
-
-    @Override
-    protected UserDto toDto(User user) {
-        return new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getDateOfBirth());
+@Transactional
+public class ActivityService extends BaseSoftDeletableServiceImpl<
+    Activity,
+    ActivityDto,
+    ActivityDto.List,
+    ActivityDto.Update,
+    ActivityDto.Create,
+    Long
+> {
+    public ActivityService(
+        BaseSoftDeletableRepository<Activity, Long> repository,
+        IMapper<Activity, ActivityDto, ActivityDto.List, ActivityDto.Update, ActivityDto.Create> mapper
+    ) {
+        super(repository, mapper);
     }
 }
