@@ -71,8 +71,8 @@ public abstract class BaseServiceImpl<T, Dto extends IBasicDto, ListDto extends 
     }
 
     @Override
-    public void deleteById(ID id) {
+    public ResponseDto<Dto, T> deleteById(ID id) {
         repository.deleteById(id);
-
+        return new ResponseDto<>(true);
     }
 }

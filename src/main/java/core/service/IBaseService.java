@@ -8,5 +8,5 @@ public interface IBaseService<T , Dto, ListDto, UpdateDto, CreateDto, ID> {
     ResponseDto<Dto, T> findById(ID id);
     ResponseDto<Dto, T> save(CreateDto dto);
     ResponseDto<Dto, T> update(ID id, UpdateDto dto);
-    void deleteById(ID id);
+    ResponseDto<Dto, T> deleteById(ID id);
 }

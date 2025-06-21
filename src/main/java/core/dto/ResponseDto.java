@@ -14,6 +14,10 @@ public class ResponseDto<Dto, Entity> {
     public ResponseDto() {
     }
 
+    public ResponseDto(boolean success) {
+        this.success = success;
+    }
+
     public ResponseDto(Dto result) {
         this.result = result;
         this.success = true;

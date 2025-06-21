@@ -25,7 +25,7 @@ public abstract class BaseSoftDeletableServiceImpl<T extends SoftDeletableEntity
 
     @Override
     public ResponseDto<PageResponseDto<ListDto>, T> findAll(Pageable pageable) {
-        return new ResponseDto<PageResponseDto<ListDto>, T>(new PageResponseDto<ListDto>(repository.findAll(pageable).map(mapper::toListDto)));
+        return new ResponseDto<PageResponseDto<ListDto>, T>(new PageResponseDto<ListDto>(repository.findAllByDeletedAtIsNull(pageable).map(mapper::toListDto)));
     }
 
     @Override

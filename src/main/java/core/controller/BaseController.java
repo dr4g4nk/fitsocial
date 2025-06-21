@@ -43,8 +43,9 @@ public class BaseController<T, Dto, ListDto, UpdateDto, CreateDto, ID> {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable ID id) {
-        service.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ResponseDto<Dto, T>> delete(@PathVariable ID id) {
+        var response = service.deleteById(id);
+        if(response.isSuccess()) return ResponseEntity.ok(response);
+        return ResponseEntity.badRequest().body(response);
     }
 }
