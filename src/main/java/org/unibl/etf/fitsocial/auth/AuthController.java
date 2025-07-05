@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,32 +17,37 @@ import org.unibl.etf.fitsocial.jwt.JwtUtil;
 import org.unibl.etf.fitsocial.auth.user.UserService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private JwtUserDetailsService userDetailsService;
 
-    @Autowired
-    private UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserService userService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+        Authentication authentication = null;
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+            var username = "";
+            if(authRequest.getUsername() == null ) username = authRequest.getEmail();
+            else username = authRequest.getUsername();
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, authRequest.getPassword()));
+
+            var userDetails = (UserDetails) authentication.getPrincipal();
+
+            final var tokens = jwtUtil.generateTokens(userDetails.getUsername());
+            return ResponseEntity.ok(tokens);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        final UserDetails userDetails = userDetailsService
-                .loadUserByUsername(authRequest.getUsername());
-        final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-        return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
     @PostMapping("/register")
@@ -49,5 +55,11 @@ public class AuthController {
         var response = userService.save(dto);
         if(response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody RefreshTokenRequest req) {
+        JwtUtil.TokenResponse tokens = jwtUtil.refreshTokens(req.refreshToken());
+        return ResponseEntity.ok(tokens);
     }
 }

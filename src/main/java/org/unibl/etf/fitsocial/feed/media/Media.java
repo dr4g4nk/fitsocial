@@ -6,12 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.unibl.etf.fitsocial.feed.post.Post;
 import java.time.Instant;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "media", schema = "feed")
-public class Media extends SoftDeletableEntity<Long> {
+public class Media extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +26,7 @@ public class Media extends SoftDeletableEntity<Long> {
     @NotNull
     @Column(name = "media_url", length = 500)
     private String mediaUrl;
-    @NotNull
-    @Column(name = "media_type")
-    private String mediaType;
-    @Column(name = "order")
+    @Column(name = "order_id")
     private Integer order;
     @CreatedDate
     @Column(name = "created_at")
@@ -35,10 +34,8 @@ public class Media extends SoftDeletableEntity<Long> {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
-    @Column(name = "content_type")
-    private String contentType;
+    @Column(name = "mime_type")
+    private String mimeType;
 
     // Getteri i setteri
 
@@ -64,14 +61,6 @@ public class Media extends SoftDeletableEntity<Long> {
 
     public void setMediaUrl(String mediaUrl) {
         this.mediaUrl = mediaUrl;
-    }
-
-    public String getMediaType() {
-        return this.mediaType;
-    }
-
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
     }
 
     public Integer getOrder() {
@@ -106,13 +95,12 @@ public class Media extends SoftDeletableEntity<Long> {
         this.deletedAt = deletedAt;
     }
 
-    public String getContentType() {
-        return contentType;
+
+    public String getMimeType() {
+        return mimeType;
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
-
-
 }

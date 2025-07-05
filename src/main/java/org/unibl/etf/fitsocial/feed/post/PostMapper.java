@@ -1,18 +1,16 @@
 package org.unibl.etf.fitsocial.feed.post;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import core.mapper.IMapper;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
 import org.unibl.etf.fitsocial.feed.media.MediaMapper;
+import org.unibl.etf.fitsocial.feed.post.PostDto.List;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {UserMapper.class, MediaMapper.class})
 public interface PostMapper extends IMapper<
     Post,
     PostDto,
-    PostDto.List,
+        PostDto.List,
     PostDto.Update,
     PostDto.Create
 > {
@@ -23,4 +21,12 @@ public interface PostMapper extends IMapper<
     @Override
     @Mapping(target = "author", source = "user")
     PostDto.List toListDto(Post entity);
+
+    @Override
+    @Mapping(target = "media", ignore = true)
+    Post fromCreateDto(PostDto.Create dto);
+
+    @Override
+    @Mapping(target = "media", ignore = true)
+    Post partialUpdate(PostDto.Update dto, @MappingTarget Post entity);
 }

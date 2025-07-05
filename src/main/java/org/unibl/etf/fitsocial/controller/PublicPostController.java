@@ -24,6 +24,7 @@ import org.unibl.etf.fitsocial.feed.media.MediaService;
 import org.unibl.etf.fitsocial.feed.post.Post;
 import org.unibl.etf.fitsocial.feed.post.PostDto;
 import org.unibl.etf.fitsocial.feed.post.PostService;
+import org.unibl.etf.fitsocial.feed.post.PostDto.List;
 import org.unibl.etf.fitsocial.service.FileStorageService;
 import java.util.concurrent.TimeUnit;
 
@@ -73,17 +74,17 @@ public class PublicPostController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    @GetMapping("/post/{mediaId}/stream")
+    @GetMapping("/post/media/{mediaId}/stream")
     public ResponseEntity<Resource> streamPostImage(@PathVariable Long mediaId) {
-        var response = mediaService.findById(mediaId);
+        var response = mediaService.findByIdForPublicPost(mediaId);
         if(response.isSuccess()) {
             var media = response.getEntity();
-            var contentType = media.getContentType();
+            var mimeType = media.getMimeType();
             Resource resource = fileStorageService.loadAsResource(media.getMediaUrl());
 
             CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentType(MediaType.parseMediaType(mimeType))
                     .cacheControl(cacheControl)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);

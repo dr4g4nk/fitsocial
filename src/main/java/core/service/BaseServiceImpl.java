@@ -55,6 +55,7 @@ public abstract class BaseServiceImpl<T, Dto extends IBasicDto, ListDto extends 
     public ResponseDto<Dto, T> save(CreateDto dto) {
         T entity = mapper.fromCreateDto(dto);
         var savedEntity = repository.save(entity);
+        entityManager.refresh(savedEntity);
         return new ResponseDto<Dto, T>(mapper.toDto(savedEntity), savedEntity);
     }
 

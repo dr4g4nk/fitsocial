@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class FileStorageService {
@@ -36,9 +37,11 @@ public class FileStorageService {
             if (filename.contains("..")) {
                 throw new RuntimeException("Invalid path sequence in " + filename);
             }
-            // Poddirektorij za odabrani tip
+
             Path targetDir = baseLocation.resolve(type.getFolderName());
             Files.createDirectories(targetDir);
+
+            filename = String.format("_%s", UUID.randomUUID()).concat(filename);
 
             Path target = targetDir.resolve(filename);
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);

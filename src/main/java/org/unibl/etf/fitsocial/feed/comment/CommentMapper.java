@@ -5,8 +5,10 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import core.mapper.IMapper;
+import org.unibl.etf.fitsocial.auth.user.UserMapper;
+import org.unibl.etf.fitsocial.feed.post.PostMapper;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {PostMapper.class, UserMapper.class})
 public interface CommentMapper extends IMapper<
     Comment,
     CommentDto,
@@ -15,7 +17,6 @@ public interface CommentMapper extends IMapper<
     CommentDto.Create
 > {
     @Override
-    @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "postId", source = "post.id")
     CommentDto.List toListDto(Comment entity);
 

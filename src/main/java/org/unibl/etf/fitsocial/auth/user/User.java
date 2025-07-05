@@ -1,22 +1,19 @@
 package org.unibl.etf.fitsocial.auth.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import core.entity.SoftDeletableEntity;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import java.sql.Blob;
 import java.time.Instant;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "user", schema = "auth")
-public class User extends SoftDeletableEntity<Long> {
+public class User extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,8 +41,6 @@ public class User extends SoftDeletableEntity<Long> {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
     @Column(name = "password")
     private String password;
     @Column(name = "profile_image_url")

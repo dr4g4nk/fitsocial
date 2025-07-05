@@ -12,18 +12,9 @@ import core.controller.BaseController;
 
 @RestController
 @RequestMapping("/api/like")
-public class LikeController extends BaseController<
-    Like,
-    LikeDto,
-    LikeDto.List,
-    LikeDto.Update,
-    LikeDto.Create,
-    Long
-> {
+public class LikeController {
     protected LikeService service;
     public LikeController(LikeService service) {
-        super(service);
-
         this.service = service;
     }
 

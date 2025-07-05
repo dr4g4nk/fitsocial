@@ -1,9 +1,6 @@
 package org.unibl.etf.fitsocial.feed.media;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import core.mapper.IMapper;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
@@ -21,4 +18,12 @@ public interface MediaMapper extends IMapper<
     @Override
     @Mapping(target = "postId", source = "post.id")
     MediaDto.List toListDto(Media entity);
+
+    @Override
+    @Mapping(target = "post.id", source = "postId")
+    Media fromCreateDto(MediaDto.Create dto);
+
+    @Override
+    @Mapping(target = "post.id", source = "postId")
+    Media partialUpdate(MediaDto.Update dto, @MappingTarget Media entity);
 }

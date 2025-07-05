@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
-    private UserRepository userRepository;
-    private UserRoleRepository userRoleRepository;
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
 
     public JwtUserDetailsService(UserRepository userRepository, UserRoleRepository userRoleRepository) {
         this.userRepository = userRepository;
@@ -36,8 +36,10 @@ public class JwtUserDetailsService implements UserDetailsService {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(Long userId) {
-        return userRoleRepository.findByUserIdAndDeletedAtIsNull(userId).stream()
-                .map(ur -> new SimpleGrantedAuthority(ur.getRole().getName()))
+
+        var list = userRoleRepository.findRolesByUserId(userId);
+        return list.stream()
+                .map(r -> new SimpleGrantedAuthority(r.getName()))
                 .collect(Collectors.toList());
     }
 }

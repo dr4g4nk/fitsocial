@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 import org.unibl.etf.fitsocial.auth.user.UserDto;
-import org.unibl.etf.fitsocial.feed.post.PostDto;
 
 @Relation(collectionRelation = "items")
 public record CommentDto(Long id, @NotNull Long postId, @NotNull Long userId,
@@ -17,14 +16,13 @@ public record CommentDto(Long id, @NotNull Long postId, @NotNull Long userId,
 						 UserDto user) implements IBasicDto {
 
 	@Relation(collectionRelation = "items")
-	public record Create(Long id, @NotNull Long postId, @NotNull Long userId,
-						 @NotNull String content, UserDto user) implements ICreateDto {}
+	public record Create(@NotNull Long postId, Long userId,
+						 @NotNull String content) implements ICreateDto {}
 
 	@Relation(collectionRelation = "items")
-	public record Update(Long id, @NotNull Long postId, @NotNull Long userId,
-						 @NotNull String content, UserDto user) implements IUpdateDto {}
+	public record Update(@NotNull String content) implements IUpdateDto {}
 
-	public record List(Long id, @NotNull Long postId, @NotNull Long userId,
+	public record List(Long id, @NotNull Long postId,
 					   @NotNull String content, Instant createdAt,
 					   UserDto user) implements IListDto {}
 }

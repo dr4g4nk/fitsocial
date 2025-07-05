@@ -20,6 +20,9 @@ public interface IMapper<T, Dto extends IBasicDto, ListDto extends IListDto, Upd
 
     T toEntity(Dto dto);
 
+    UpdateDto toUpdateDto(T entity);
+    CreateDto toCreateDto(T entity);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     T partialUpdate(UpdateDto dto, @MappingTarget T entity);
 }

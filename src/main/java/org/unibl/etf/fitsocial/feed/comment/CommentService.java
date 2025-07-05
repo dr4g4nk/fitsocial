@@ -2,6 +2,7 @@ package org.unibl.etf.fitsocial.feed.comment;
 
 import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
+import core.util.CurrentUserDetails;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,12 @@ public class CommentService extends BaseSoftDeletableServiceImpl<
             return new ResponseDto<>(new PageResponseDto<>(repository.findAllByPostIdAndDeletedAtIsNull(postId, pageable).map(mapper::toListDto)));
 
         return new ResponseDto<>("Not found");
+    }
 
+    @Override
+    public ResponseDto<CommentDto, Comment> save(CommentDto.Create dto) {
+        var userDetails = getUserDetails();
+        dto = new CommentDto.Create(dto.postId(), userDetails.orElse(new CurrentUserDetails()).getId(), dto.content());
+        return super.save(dto);
     }
 }

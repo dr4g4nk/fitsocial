@@ -1,24 +1,24 @@
 package org.unibl.etf.fitsocial.feed.media;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import core.dto.IBasicDto;
 import core.dto.ICreateDto;
 import core.dto.IListDto;
 import core.dto.IUpdateDto;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.springframework.hateoas.server.core.Relation;
+import org.springframework.web.multipart.MultipartFile;
 
 @Relation(collectionRelation = "items")
-public record MediaDto(Long id, Long postId, Integer order, String contentType) implements IBasicDto {
+public record MediaDto(Long id, Long postId, Integer order, String mimeType) implements IBasicDto {
     @Relation(collectionRelation = "items")
-    public record Create(Long id, Long postId, Integer order, String contentType) implements ICreateDto {
+    public record Create(Long postId, Integer order, String mimeType, MultipartFile file, @JsonIgnore String mediaUrl) implements ICreateDto {
     }
 
     @Relation(collectionRelation = "items")
-    public record Update(Long id, Long postId, Integer order, String contentType) implements IUpdateDto {
+    public record Update(Long id, Long postId, Integer order, String mimeType, MultipartFile file) implements IUpdateDto {
     }
 
     @Relation(collectionRelation = "items")
-    public record List(Long id, Long postId, Integer order, String contentType) implements IListDto {
+    public record List(Long id, Long postId, Integer order, String mimeType) implements IListDto {
     }
 }

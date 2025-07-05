@@ -7,24 +7,31 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.unibl.etf.fitsocial.auth.user.User;
 import org.unibl.etf.fitsocial.feed.activity.Activity;
 import org.unibl.etf.fitsocial.feed.media.Media;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
+@SQLRestriction("deleted_at IS NULL")
 @Table(name = "post", schema = "feed")
-public class Post extends SoftDeletableEntity<Long> {
+public class Post extends SoftDeletableEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @SQLRestriction("deleted_at IS NULL")
     private User user;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "activity_id")
+    @SQLRestriction("deleted_at IS NULL")
     private Activity activity;
     @Column(name = "content")
     private String content;
@@ -36,19 +43,16 @@ public class Post extends SoftDeletableEntity<Long> {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
     @Column(name = "is_public")
     private Boolean isPublic;
     @Column(name = "like_count")
     private Long likeCount;
 
     @OneToMany(
-            mappedBy = "post",
-            fetch = FetchType.LAZY
+            mappedBy = "post"
     )
+    @SQLRestriction("deleted_at IS NULL")
     private List<Media> media = new ArrayList<>();
-
 
     // Getteri i setteri
 

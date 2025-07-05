@@ -1,14 +1,5 @@
 package org.unibl.etf.fitsocial.auth;
 
-public class AuthResponse {
-    private String jwt;
+import org.unibl.etf.fitsocial.auth.user.UserDto;
 
-    public AuthResponse(String jwt) {
-        this.jwt = jwt;
-    }
-
-    public String getJwt() {
-        return jwt;
-    }
-
-}
+public record AuthResponse(String token, String refreshToken, UserDto user) {}
