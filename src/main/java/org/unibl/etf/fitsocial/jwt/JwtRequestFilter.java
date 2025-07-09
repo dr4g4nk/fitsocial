@@ -38,39 +38,39 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         try {
-        final String authorizationHeader = request.getHeader("Authorization");
+            final String authorizationHeader = request.getHeader("Authorization");
 
-        String username = null;
-        String jwt = null;
+            String username = null;
+            String jwt = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 jwt = authorizationHeader.substring(7);
                 username = jwtUtil.extractUsername(jwt);
-        }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
-            if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        }
-        chain.doFilter(request, response);
 
-    } catch (ExpiredJwtException ex) {
-        SecurityContextHolder.clearContext();
-        authenticationEntryPoint.commence(request, response,
-                new InsufficientAuthenticationException("JWT token je istekao"));
-    } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-        SecurityContextHolder.clearContext();
-        authenticationEntryPoint.commence(request, response,
-                new InsufficientAuthenticationException("Nevalidan JWT token"));
-    } catch (JwtException ex) {
-        SecurityContextHolder.clearContext();
-        authenticationEntryPoint.commence(request, response,
-                new InsufficientAuthenticationException("Greška prilikom obrade tokena"));
-    }
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+                if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+            chain.doFilter(request, response);
+
+        } catch (ExpiredJwtException ex) {
+            SecurityContextHolder.clearContext();
+            authenticationEntryPoint.commence(request, response,
+                    new InsufficientAuthenticationException("JWT token je istekao"));
+        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
+            SecurityContextHolder.clearContext();
+            authenticationEntryPoint.commence(request, response,
+                    new InsufficientAuthenticationException("Nevalidan JWT token"));
+        } catch (JwtException ex) {
+            SecurityContextHolder.clearContext();
+            authenticationEntryPoint.commence(request, response,
+                    new InsufficientAuthenticationException("Greška prilikom obrade tokena"));
+        }
     }
 }

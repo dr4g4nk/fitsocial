@@ -26,6 +26,7 @@ import org.unibl.etf.fitsocial.feed.post.PostDto;
 import org.unibl.etf.fitsocial.feed.post.PostService;
 import org.unibl.etf.fitsocial.feed.post.PostDto.List;
 import org.unibl.etf.fitsocial.service.FileStorageService;
+
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -50,53 +51,57 @@ public class PublicPostController {
 
     @GetMapping("/post")
     public ResponseDto<PageResponseDto<PostDto.List>, Post> getAll(Pageable pageable) {
-         return postService.finaAllByPublic(pageable, true);
+        return postService.finaAllByPublic(pageable, true);
     }
 
     @GetMapping("/post/{id}")
     public ResponseEntity<ResponseDto<PostDto, Post>> getPostById(@PathVariable Long id) {
         var response = postService.findById(id);
-        if(response.isSuccess()) return ResponseEntity.ok(response);
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("/post/{postId}/like")
     public ResponseEntity<ResponseDto<PageResponseDto<LikeDto.List>, Like>> getLikesByPostId(@PathVariable Long postId, Pageable pageable) {
         var response = likeService.findAllByPostId(postId, pageable);
-        if(response.isSuccess()) return ResponseEntity.ok(response);
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("/post/{postId}/comment")
-    public ResponseEntity<ResponseDto<PageResponseDto<CommentDto.List>, Comment>>  getCommentsByPostId(@PathVariable Long postId, Pageable pageable) {
+    public ResponseEntity<ResponseDto<PageResponseDto<CommentDto.List>, Comment>> getCommentsByPostId(@PathVariable Long postId, Pageable pageable) {
         var response = commentService.findAllByPostId(postId, pageable);
-        if(response.isSuccess()) return ResponseEntity.ok(response);
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("/post/media/{mediaId}/stream")
     public ResponseEntity<Resource> streamPostImage(@PathVariable Long mediaId) {
         var response = mediaService.findByIdForPublicPost(mediaId);
-        if(response.isSuccess()) {
+        if (response.isSuccess()) {
             var media = response.getEntity();
-            var mimeType = media.getMimeType();
-            Resource resource = fileStorageService.loadAsResource(media.getMediaUrl());
+            if (media != null) {
+                var mimeType = media.getMimeType();
+                Resource resource = fileStorageService.loadAsResource(media.getMediaUrl());
 
-            CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .cacheControl(cacheControl)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
+                CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(mimeType))
+                        .cacheControl(cacheControl)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            }
         }
+
         return ResponseEntity.notFound().build();
+
     }
 
     @Transactional(readOnly = true)
     @GetMapping("/user/{id}/avatar")
     public ResponseEntity<Resource> getUserAvatar(@PathVariable Long id) {
         var response = userService.findById(id);
-        if(response.isSuccess()) {
+        if (response.isSuccess()) {
             var user = response.getEntity();
             var contentType = user.getProfileImageContentType();
             Resource resource = fileStorageService.loadAsResource(user.getProfileImageUrl());

@@ -18,6 +18,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.unibl.etf.fitsocial.jwt.JwtRequestFilter;
 
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
 
@@ -33,18 +34,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/auth/**", "/public/**", "api/post/media/*/stream").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
-                )
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/auth/**","/public/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        .authenticationEntryPoint(authenticationEntryPoint)
 
+                );
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
