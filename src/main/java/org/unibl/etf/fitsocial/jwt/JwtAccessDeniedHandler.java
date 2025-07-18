@@ -34,7 +34,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         body.put("timestamp", Instant.now().toString());
         body.put("status", HttpStatus.FORBIDDEN.value());
         body.put("error", "Forbidden");
-        body.put("message", accessDeniedException.getMessage());
+        body.put("messageId", accessDeniedException.getMessage());
         body.put("path", request.getRequestURI());
 
         new ObjectMapper().writeValue(response.getOutputStream(), body);

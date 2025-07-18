@@ -1,7 +1,10 @@
 package org.unibl.etf.fitsocial.auth.user;
 
+import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
+import core.util.CurrentUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.NoTransactionException;
@@ -10,21 +13,28 @@ import core.mapper.IMapper;
 import core.repository.BaseSoftDeletableRepository;
 import core.service.BaseSoftDeletableServiceImpl;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.unibl.etf.fitsocial.auth.FcmTokenDto;
+import org.unibl.etf.fitsocial.auth.fcmtoken.FcmToken;
+import org.unibl.etf.fitsocial.auth.fcmtoken.FcmTokenRepository;
+
+import java.time.Instant;
 
 @Service
 @Transactional
 public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, UserDto.List, UserDto.Update, UserDto.Create, Long> {
 
     private PasswordEncoder passwordEncoder;
-    UserRepository userRepository;
+    private UserRepository userRepository;
+    private FcmTokenRepository fcmTokenRepository;
 
     public UserService(BaseSoftDeletableRepository<User, Long> repository,
                        PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
-                       IMapper<User, UserDto, UserDto.List, UserDto.Update, UserDto.Create> mapper) {
+                       IMapper<User, UserDto, UserDto.List, UserDto.Update, UserDto.Create> mapper, FcmTokenRepository fcmTokenRepository) {
         super(repository, mapper);
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.fcmTokenRepository = fcmTokenRepository;
     }
 
     @Override
@@ -52,5 +62,44 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
         }
 
         return response;
+    }
+
+    public void saveFcmToken(FcmTokenDto dto){
+        var userDetails = getUserDetails();
+        var userId = userDetails.orElse(new CurrentUserDetails()).getId();
+        var user = entityManager.getReference(User.class, userId);
+
+        var optToken = fcmTokenRepository.findByToken(dto.token());
+        if(optToken.isPresent()){
+            var fcmToken = optToken.get();
+            if(!userId.equals(fcmToken.getUser().getId())){
+                fcmToken.setUser(user);
+                fcmToken.setTimestamp(Instant.now());
+
+                fcmTokenRepository.save(fcmToken);
+            }
+        }
+        else{
+            var fcmToken = new FcmToken();
+            fcmToken.setToken(dto.token());
+            fcmToken.setUser(user);
+            fcmToken.setTimestamp(Instant.now());
+
+            fcmTokenRepository.save(fcmToken);
+        }
+
+    }
+
+    public ResponseDto<PageResponseDto<UserDto.List>, User> findByValue(String value, Pageable pageable) {
+        var res = userRepository.findAllByTextFilter(value, pageable);
+
+        return new ResponseDto<>(new PageResponseDto<>(res.map(mapper::toListDto)));
+    }
+
+    public void logout(){
+        var userDetails = getUserDetails();
+        var userId = userDetails.orElse(new CurrentUserDetails()).getId();
+
+        fcmTokenRepository.deleteByUserId(userId);
     }
 }

@@ -6,8 +6,6 @@ import core.dto.ResponseDto;
 import core.service.BaseSoftDeletableServiceImpl;
 import core.util.CurrentUserDetails;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
@@ -21,8 +19,7 @@ import org.unibl.etf.fitsocial.feed.like.LikeService;
 import org.unibl.etf.fitsocial.feed.media.MediaDto;
 import org.unibl.etf.fitsocial.feed.media.MediaService;
 import org.unibl.etf.fitsocial.service.FileStorageService;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.unibl.etf.fitsocial.util.FileResourceUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -51,15 +48,13 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
         this.likeService = likeService;
     }
 
-    private static final int BUFFER_SIZE = 64 * 1024; // 64 KB
-
     @PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResponseDto<PostDto, Post>> create(@RequestPart("post") PostDto.Create dto, @RequestPart(value = "newMedia", required = false) java.util.List<MultipartFile> newMedia) {
+    public ResponseEntity<ResponseDto<PostDto, Post>> create(@RequestPart("post") PostDto.Create dto, @RequestPart(value = "mediaFiles", required = false) java.util.List<MultipartFile> mediaFiles) {
         var media = new ArrayList<MediaDto.Create>();
 
-        if (newMedia != null) {
-            for (int i = 0; i < newMedia.size(); i++) {
-                var m = newMedia.get(i);
+        if (mediaFiles != null) {
+            for (int i = 0; i < mediaFiles.size(); i++) {
+                var m = mediaFiles.get(i);
                 media.add(new MediaDto.Create(0L, i, m.getContentType(), m, null));
             }
         }
@@ -116,69 +111,12 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
             return ResponseEntity.notFound().build();
         }
         var media = resp.getEntity();
-        Resource resource = fileStorageService.loadAsResource(media.getMediaUrl());
-        long fileSize = resource.contentLength();
 
-        MediaType mediaType = MediaType.parseMediaType(media.getMimeType());
+        var util = new FileResourceUtil(fileStorageService);
 
-        boolean isVideo = mediaType.getType().equals("video");
-        List<HttpRange> ranges = headers.getRange();
-        long start, end = fileSize - 1;
-        HttpStatus status = HttpStatus.OK;
+        var res = util.getResourceResponse(media.getMediaUrl(), media.getMimeType(), headers.getRange(), 0);
 
-        if (isVideo){
-            if(!ranges.isEmpty()) {
-                HttpRange range = ranges.getFirst();
-                start = range.getRangeStart(fileSize);
-                end = range.getRangeEnd(fileSize);
-
-            } else {
-                start = 0;
-                end = fileSize < CHUNK_SIZE ? fileSize - 1 : CHUNK_SIZE;
-            }
-
-            status = HttpStatus.PARTIAL_CONTENT;
-        } else {
-            start = 0;
-        }
-
-        long contentLength = end - start + 1;
-
-        StreamingResponseBody body = outputStream -> {
-            try (SeekableByteChannel channel = Files.newByteChannel(resource.getFile().toPath(), StandardOpenOption.READ)) {
-                channel.position(start);
-                ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-                long bytesLeft = contentLength;
-
-                while (bytesLeft > 0) {
-                    int read = channel.read(buffer);
-                    if (read == -1) break;
-                    buffer.flip();
-
-                    int toWrite = (int)Math.min(read, bytesLeft);
-                    outputStream.write(buffer.array(), 0, toWrite);
-                    bytesLeft -= toWrite;
-                    buffer.clear();
-                }
-            }
-        };
-
-        CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
-
-        HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.set(HttpHeaders.CONTENT_TYPE, mediaType.toString());
-        respHeaders.set(HttpHeaders.ACCEPT_RANGES, "bytes");
-        respHeaders.setContentLength(contentLength);
-        respHeaders.setCacheControl(cacheControl);
-
-        if (status == HttpStatus.PARTIAL_CONTENT) {
-            respHeaders.set(
-                    HttpHeaders.CONTENT_RANGE,
-                    String.format("bytes %d-%d/%d", start, end, fileSize)
-            );
-        }
-
-        return new ResponseEntity<>(body, respHeaders, status);
+        return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
     }
 
 

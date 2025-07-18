@@ -5,10 +5,10 @@ import core.mapper.IMapper;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AttachmentMapper extends IMapper<
-    Attachment,
-    AttachmentDto,
-    AttachmentDto.List,
-    AttachmentDto.Update,
-    AttachmentDto.Create
-> {
+        Attachment,
+        AttachmentDto,
+        AttachmentDto.List,
+        AttachmentDto.Update,
+        AttachmentDto.Create
+        > {
 }

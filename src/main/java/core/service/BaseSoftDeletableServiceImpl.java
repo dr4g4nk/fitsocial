@@ -1,5 +1,6 @@
 package core.service;
 
+import com.google.gson.Gson;
 import core.dto.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Pageable;

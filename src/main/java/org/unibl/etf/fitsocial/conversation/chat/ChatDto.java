@@ -9,13 +9,18 @@ import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
 import org.unibl.etf.fitsocial.auth.user.UserDto;
+import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
 
 @Relation(collectionRelation = "items")
-public record ChatDto(Long id, String subject, UserDto createdBy) implements IBasicDto {
+public record ChatDto(Long id, String subject, String text, Instant updatedAt,
+                      java.util.List<UserDto> users) implements IBasicDto {
     @Relation(collectionRelation = "items")
-    public record Create(String subject, @NotNull @Size(min = 1) java.util.List<Long> userIds) implements ICreateDto {
+    public record Create(String subject, @NotNull @Size(min = 1) java.util.List<Long> userIds, String content,
+                         AttachmentDto.Create attachment) implements ICreateDto {
     }
 
     @Relation(collectionRelation = "items")
@@ -23,6 +28,14 @@ public record ChatDto(Long id, String subject, UserDto createdBy) implements IBa
     }
 
     @Relation(collectionRelation = "items")
-    public record List(Long id, String subject, UserDto createdBy) implements IListDto {
+    public record List(Long id, String subject, String text, Instant updatedAt,
+                       java.util.List<UserDto> users) implements IListDto {
+        public List(Long id, String subject) {
+            this(id, subject, null, null, Collections.emptyList());
+        }
+
+        public List(List dto, java.util.List<UserDto> users) {
+            this(dto.id, dto.subject, dto.text, dto.updatedAt, users);
+        }
     }
 }

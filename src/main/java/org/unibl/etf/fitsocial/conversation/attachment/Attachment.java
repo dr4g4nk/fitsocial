@@ -18,9 +18,6 @@ public class Attachment extends SoftDeletableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "message_id", nullable = false)
-    private Message message;
     @NotNull
     @Column(name = "content_type")
     private String contentType;
@@ -35,6 +32,9 @@ public class Attachment extends SoftDeletableEntity {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Column(name="file_name")
+    private String fileName;
+
     // Getteri i setteri
 
     public Long getId() {
@@ -43,14 +43,6 @@ public class Attachment extends SoftDeletableEntity {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Message getMessage() {
-        return this.message;
-    }
-
-    public void setMessage(Message message) {
-        this.message = message;
     }
 
     public String getContentType() {
@@ -91,5 +83,13 @@ public class Attachment extends SoftDeletableEntity {
 
     public void setDeletedAt(Instant deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

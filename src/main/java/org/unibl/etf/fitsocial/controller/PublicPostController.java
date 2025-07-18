@@ -101,7 +101,7 @@ public class PublicPostController {
     @GetMapping("/user/{id}/avatar")
     public ResponseEntity<Resource> getUserAvatar(@PathVariable Long id) {
         var response = userService.findById(id);
-        if (response.isSuccess()) {
+        if (response.isSuccess() && response.getEntity() != null) {
             var user = response.getEntity();
             var contentType = user.getProfileImageContentType();
             Resource resource = fileStorageService.loadAsResource(user.getProfileImageUrl());

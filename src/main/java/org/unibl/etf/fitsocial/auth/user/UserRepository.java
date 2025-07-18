@@ -1,6 +1,8 @@
 package org.unibl.etf.fitsocial.auth.user;
 
 import core.repository.BaseSoftDeletableRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -12,4 +14,10 @@ public interface UserRepository extends BaseSoftDeletableRepository<User,Long> {
 
     boolean existsByUsernameAndDeletedAtIsNull(String username);
     boolean existsByEmailAndDeletedAtIsNull(String email);
+
+    @Query("""
+            select u from User u where lower(concat(u.firstName, ' ', u.lastName)) like lower(concat('%', :value, '%'))
+            """)
+    Page<User> findAllByTextFilter(@Param("value") String value, Pageable pageable);
+    
 }

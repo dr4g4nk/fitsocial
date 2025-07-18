@@ -6,6 +6,7 @@ import core.dto.ICreateDto;
 import core.dto.IListDto;
 import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -16,25 +17,42 @@ import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserDto;
 
 @Relation(collectionRelation = "items")
 public record MessageDto(
-	Long id,
-	Long chatId,
-	UserDto user,
-	@NotNull 
-	String content
+        Long id,
+        Long chatId,
+        UserDto user,
+        @NotNull
+        String content,
+        Boolean my, AttachmentDto attachment
 ) implements IBasicDto {
-	@Relation(collectionRelation = "items")
-	public record Create(@NotNull Long chatId, @NotNull String content, java.util.List<AttachmentDto.Create> attachments) implements ICreateDto {
-	}
-	@Relation(collectionRelation = "items")
-	public record Update(@NotNull Long chatId, @NotNull String content) implements IUpdateDto {
-	}
+    @Relation(collectionRelation = "items")
+    public record Create(@NotNull Long chatId, @NotNull String content,
+                         AttachmentDto.Create attachment) implements ICreateDto {
+    }
 
-    	@Relation(collectionRelation = "items")
-    	public record List(
-		Long id,
-		Long chatId,
-		UserDto user,
-		@NotNull
-		String content
-	) implements IListDto {}
+    @Relation(collectionRelation = "items")
+    public record Update(@NotNull String content,
+                         AttachmentDto.Create attachment) implements IUpdateDto {
+    }
+
+    @Relation(collectionRelation = "items")
+    public record List(
+            Long id,
+            Long chatId,
+            UserDto user,
+            @NotNull
+            String content,
+            Instant createdAt,
+            Instant updatedAt,
+            Boolean my, AttachmentDto attachment
+    ) implements IListDto {
+        public List(Long id,
+                    Long chatId,
+                    UserDto user,
+                    @NotNull
+                    String content,
+                    Instant createdAt,
+                    Instant updatedAt) {
+            this(id, chatId, user, content, createdAt, updatedAt, false, null);
+        }
+    }
 }

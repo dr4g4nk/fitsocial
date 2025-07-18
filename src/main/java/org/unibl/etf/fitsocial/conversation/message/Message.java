@@ -4,10 +4,16 @@ import jakarta.persistence.*;
 import core.entity.SoftDeletableEntity;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.unibl.etf.fitsocial.conversation.attachment.Attachment;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUser;
+import org.unibl.etf.fitsocial.feed.media.Media;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -32,6 +38,10 @@ public class Message extends SoftDeletableEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attachment_id")
+    private Attachment attachment;
 
     // Getteri i setteri
 
@@ -81,5 +91,13 @@ public class Message extends SoftDeletableEntity {
 
     public void setDeletedAt(Instant deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Attachment getAttachment() {
+        return attachment;
+    }
+
+    public void setAttachment(Attachment attachment) {
+        this.attachment = attachment;
     }
 }

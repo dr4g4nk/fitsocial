@@ -22,6 +22,14 @@ public class PageResponseDto<T> {
         this.totalPages = page.getTotalPages();
     }
 
+    public PageResponseDto(List<T> content, int number, int size, long totalElements, int totalPages) {
+        this.content = content;
+        this.number = number;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+    }
+
     public List<T> getContent() {
         return content;
     }

@@ -6,39 +6,38 @@ import core.dto.ICreateDto;
 import core.dto.IListDto;
 import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
-import java.time.Instant;
+import org.springframework.web.multipart.MultipartFile;
 import org.unibl.etf.fitsocial.conversation.message.MessageDto;
 
 @Relation(collectionRelation = "items")
 public record AttachmentDto(
 	Long id,
-	MessageDto message,
+	String fileName,
 	@NotNull 
-	String contentType,
-	String fileUrl
+	String contentType
 ) implements IBasicDto {
 	@Relation(collectionRelation = "items")
     	public record Create(
-			Long id,
+				String fileName,
 			@NotNull
 			String contentType,
-			String fileUrl
+			MultipartFile file
 	) implements ICreateDto {}
 
     	@Relation(collectionRelation = "items")
     	public record Update(
 		Long id,
+		String fileName,
 		@NotNull 
 		String contentType,
-		String fileUrl
+		MultipartFile file
 	) implements IUpdateDto {}
 
     	@Relation(collectionRelation = "items")
     	public record List(
 		Long id,
-		MessageDto message,
+		String fileName,
 		@NotNull
-		String contentType,
-		String fileUrl
+		String contentType
 	) implements IListDto {}
 }

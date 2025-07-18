@@ -150,7 +150,7 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
             entity.setUser(user);
             var savedEntity = postRepository.save(entity);
 
-            dto.media().forEach(mediaService::save);
+            dto.media().stream().map(m-> new MediaDto.Create(savedEntity.getId(), m.order(), m.mimeType(), m.file(), null)).forEach(mediaService::save);
 
             entityManager.refresh(savedEntity);
             response = new ResponseDto<PostDto, Post>(mapper.toDto(savedEntity), savedEntity);

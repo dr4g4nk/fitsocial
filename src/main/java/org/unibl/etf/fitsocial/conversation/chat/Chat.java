@@ -32,7 +32,25 @@ public class Chat extends SoftDeletableEntity {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // Getteri i setteri
+    public Chat() {
+    }
+
+    public Chat(Long id, String subject, User createdBy, Instant createdAt, Instant updatedAt, Instant deletedAt) {
+        this.id = id;
+        this.subject = subject;
+        this.createdBy = createdBy;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        super.deletedAt = deletedAt;
+    }
+
+    public Chat(Long id, String subject, Instant updatedAt) {
+        super();
+        this.id = id;
+        this.subject = subject;
+        this.updatedAt = updatedAt;
+    }
+// Getteri i setteri
 
     public Long getId() {
         return this.id;
