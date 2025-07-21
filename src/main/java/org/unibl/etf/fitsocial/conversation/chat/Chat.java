@@ -31,6 +31,8 @@ public class Chat extends SoftDeletableEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
+    @Column(name="last_message_time")
+    private Instant lastMessageTime;
 
     public Chat() {
     }
@@ -98,5 +100,13 @@ public class Chat extends SoftDeletableEntity {
 
     public void setDeletedAt(Instant deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Instant getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(Instant lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
     }
 }

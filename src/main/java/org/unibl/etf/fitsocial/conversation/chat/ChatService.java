@@ -70,9 +70,19 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var chats = repository.findAllChatsByUserId(userId, pageable);
         var chatId = chats.stream().map(Chat::getId).collect(Collectors.toList());
         var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatId, userId);
-        var messages = messageRepository.findLastMessagesForChats(chatId).stream().collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
+        var messages = messageRepository.findLastMessagesForChats(chatId).stream()
+                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
 
-        var result = chats.stream().map(c -> new ChatDto.List(c.getId(), chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).count() > 1 ? c.getSubject() : chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName()).collect(Collectors.joining(", ")), messages.get(c.getId()) != null ? messages.get(c.getId())._1() : "", messages.get(c.getId()) != null ? messages.get(c.getId())._2() : c.getUpdatedAt(), chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList()))).collect(Collectors.toList());
+        var result = chats.stream().map(c ->
+                new ChatDto.List(
+                        c.getId(),
+                        chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).count() > 1
+                                ? c.getSubject()
+                                : chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId()))
+                                .map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName()).collect(Collectors.joining(", ")),
+                        messages.get(c.getId()) != null ? messages.get(c.getId())._1() : "",
+                        c.getLastMessageTime(),
+                        chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList()))).collect(Collectors.toList());
 
         return new ResponseDto<>(new PageResponseDto<>(result, chats.getNumber(), chats.getSize(), chats.getTotalElements(), chats.getTotalPages()));
     }
@@ -92,9 +102,19 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var chat = chatOptional.get();
         var chatList = Collections.singletonList(chat.getId());
         var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatList, userId);
-        var messages = messageRepository.findLastMessagesForChats(chatList).stream().collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
-        return new ResponseDto<>(new ChatDto(chat.getId(), chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).count() > 1 ? chat.getSubject() : chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName()).collect(Collectors.joining(", ")), messages.get(chat.getId()) != null ? messages.get(chat.getId())._1() : "", messages.get(chat.getId()) != null ? messages.get(chat.getId())._2() : chat.getUpdatedAt(), chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList())));
-
+        var messages = messageRepository.findLastMessagesForChats(chatList).stream()
+                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
+        return new ResponseDto<>(
+                new ChatDto(
+                        chat.getId(),
+                        chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).count() > 1
+                                ? chat.getSubject()
+                                : chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId()))
+                                .map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName())
+                                .collect(Collectors.joining(", ")),
+                        messages.get(chat.getId()) != null ? messages.get(chat.getId())._1() : "",
+                        chat.getLastMessageTime(),
+                        chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList())));
     }
 
     @Override
