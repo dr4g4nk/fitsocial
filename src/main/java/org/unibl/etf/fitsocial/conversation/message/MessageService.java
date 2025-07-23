@@ -81,8 +81,27 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
             var chatUserOpt = chatUserRepository.findFirstByChatIdAndUserIdAndDeletedAtIsNull(dto.chatId(), userId);
 
             if (chatUserOpt.isPresent()) {
+                var hasAttachment = dto.attachment() != null;
+                var hasVideo = hasAttachment && dto.attachment().contentType().startsWith("video");
+                var hasImage = hasAttachment && dto.attachment().contentType().startsWith("image");
+
                 var chatUser = chatUserOpt.get();
                 entity.setChatUser(chatUser);
+
+                var isGroup = chatUserRepository.isGroupChat(chatUser.getChat().getId());
+
+                if (hasAttachment) {
+                    String label = "Šalje dokument";
+                    if (hasVideo)
+                        label = "Šalje video";
+                    else if (hasImage)
+                        label = "Šalje sliku";
+                    if (isGroup) {
+                        label = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName() + " " + label.toLowerCase();
+                    }
+                    entity.setLabel(label);
+                }
+
                 var message = repository.saveAndFlush(entity);
 
                 entityManager.refresh(message);
@@ -94,13 +113,31 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                 var userIds = chatUsers.stream().map(cu -> cu.getUser().getId()).toList();
                 var tokens = fcmTokenRepository.findAllByUserIdInLatest(userIds);
 
+                String subject;
+
+                if (userIds.size() > 1) {
+                    subject = chatUsers.stream().findFirst().get().getChat().getSubject();
+                } else {
+                    subject = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName();
+                }
+
+                messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.my(), messageDto.attachment(),chatUser.getChat().getSubject(), isGroup);
+                var hasMedia = hasVideo || hasImage;
+
+                MessageDto finalMessageDto = messageDto;
                 var data = new HashMap<String, String>();
                 data.put("data", objectMapper.writeValueAsString(messageDto));
                 data.put("type", "chat_messages");
+                data.put("title", subject);
+                data.put("body", hasMedia ? finalMessageDto.label() : finalMessageDto.content());
 
                 tokens.forEach(t -> {
                     try {
-                        notificationService.sendNotificationAsync(t, chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName(), messageDto.content(), dto.attachment() != null ? BASE_URL + "/api/attacment/" + messageDto.attachment().id() + "/stream" : null, data);
+                        notificationService.sendNotificationAsync(
+                                t,
+                                null, null,
+                                null,
+                                data);
                     } catch (FirebaseMessagingException ignored) {
 
                     }
@@ -131,6 +168,7 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                                 m.getChatUser().getChat().getId(),
                                 userMapper.toDto(m.getChatUser().getUser()),
                                 m.getContent(),
+                                m.getLabel(),
                                 m.getCreatedAt(),
                                 m.getUpdatedAt(),
                                 userId.equals(m.getChatUser().getUser().getId()),

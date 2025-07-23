@@ -17,4 +17,9 @@ public interface ChatUserRepository extends BaseSoftDeletableRepository<ChatUser
             select cu from ChatUser cu where cu.deletedAt is null and cu.user.id != :userId and cu.chat.id in :chatId
             """)
     List<ChatUser> findAllByChatIdInAndNotUserId(@Param("chatId") List<Long> chatId, @Param("userId") Long userId);
+
+    @Query("""
+            select count(*) > 2 from ChatUser cu where cu.chat.id = :chatId and cu.deletedAt is null
+            """)
+    Boolean isGroupChat(@Param("chatId") Long chatId);
 }

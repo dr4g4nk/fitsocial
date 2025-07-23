@@ -14,6 +14,7 @@ public interface MessageMapper extends IMapper<
     @Override
     @Mapping(target = "user", source = "chatUser.user")
     @Mapping(target = "chatId", source = "chatUser.chat.id")
+    @Mapping(target = "subject", source = "chatUser.chat.subject")
     MessageDto toDto(Message entity);
 
     @Override

@@ -87,7 +87,16 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
 
             fcmTokenRepository.save(fcmToken);
         }
+    }
 
+    public void removeFcmToken(FcmTokenDto dto){
+        var userDetails = getUserDetails();
+        var userId = userDetails.orElse(new CurrentUserDetails()).getId();
+
+        var optToken = fcmTokenRepository.findByToken(dto.token());
+        if(optToken.isPresent()){
+            fcmTokenRepository.deleteByToken(dto.token());
+        }
     }
 
     public ResponseDto<PageResponseDto<UserDto.List>, User> findByValue(String value, Pageable pageable) {
@@ -96,10 +105,10 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
         return new ResponseDto<>(new PageResponseDto<>(res.map(mapper::toListDto)));
     }
 
-    public void logout(){
+    public void logout(FcmTokenDto tokenDto){
         var userDetails = getUserDetails();
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
 
-        fcmTokenRepository.deleteByUserId(userId);
+        fcmTokenRepository.deleteByToken(tokenDto.token());
     }
 }

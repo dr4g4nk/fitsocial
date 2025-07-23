@@ -22,7 +22,10 @@ public record MessageDto(
         UserDto user,
         @NotNull
         String content,
-        Boolean my, AttachmentDto attachment
+        String label,
+        Boolean my, AttachmentDto attachment,
+        String subject,
+        Boolean isGroup
 ) implements IBasicDto {
     @Relation(collectionRelation = "items")
     public record Create(@NotNull Long chatId, @NotNull String content,
@@ -41,6 +44,7 @@ public record MessageDto(
             UserDto user,
             @NotNull
             String content,
+            String label,
             Instant createdAt,
             Instant updatedAt,
             Boolean my, AttachmentDto attachment
@@ -50,9 +54,10 @@ public record MessageDto(
                     UserDto user,
                     @NotNull
                     String content,
+                    String label,
                     Instant createdAt,
                     Instant updatedAt) {
-            this(id, chatId, user, content, createdAt, updatedAt, false, null);
+            this(id, chatId, user, content, label, createdAt, updatedAt, false, null);
         }
     }
 }

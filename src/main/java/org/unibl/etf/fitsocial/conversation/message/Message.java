@@ -43,6 +43,9 @@ public class Message extends SoftDeletableEntity {
     @JoinColumn(name = "attachment_id")
     private Attachment attachment;
 
+    @Column(name = "label")
+    private String label;
+
     // Getteri i setteri
 
     public Long getId() {
@@ -99,5 +102,13 @@ public class Message extends SoftDeletableEntity {
 
     public void setAttachment(Attachment attachment) {
         this.attachment = attachment;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 }

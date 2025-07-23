@@ -175,9 +175,9 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
                 try {
                     notificationService.sendNotificationAsync(
                             t,
-                            chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName(),
-                            dbMessage.getContent(),
-                            attachment != null ? BASE_URL + "/api/attachment/" + attachment.getId() + "/stream" : null,
+                            null,
+                            null,
+                            null,
                             data);
                 } catch (FirebaseMessagingException ignored) {
                 }

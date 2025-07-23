@@ -7,6 +7,7 @@ import core.service.BaseSoftDeletableServiceImpl;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.unibl.etf.fitsocial.auth.FcmTokenDto;
@@ -48,6 +49,13 @@ public class UserController extends BaseController<
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied!");
     }
 
+    @PostMapping("/logout")
+    public void logout(@RequestBody FcmTokenDto fcmTokenDto){
+        try{
+            userService.logout(fcmTokenDto);
+        } catch (Exception e){ }
+    }
+
     @GetMapping("/{id}/avatar")
     public ResponseEntity<Resource> getUserAvatar(@PathVariable Long id) {
         var response = userService.findById(id);
@@ -77,6 +85,16 @@ public class UserController extends BaseController<
 
     @PostMapping("/fcm")
     public ResponseEntity<?> fcm(@RequestBody FcmTokenDto fcmTokenDto){
+        try{
+            userService.saveFcmToken(fcmTokenDto);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error");
+        }
+    }
+
+    @PostMapping("/fcm/remove")
+    public ResponseEntity<?> fcmRemove(@RequestBody FcmTokenDto fcmTokenDto){
         try{
             userService.saveFcmToken(fcmTokenDto);
             return ResponseEntity.ok().build();

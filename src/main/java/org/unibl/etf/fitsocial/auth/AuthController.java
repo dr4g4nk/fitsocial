@@ -48,14 +48,6 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/logout")
-    @PreAuthorize("isAuthenticated()")
-    public void logout(){
-        try{
-            userService.logout();
-        } catch (Exception e){ }
-    }
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserDto.Create dto) {
         var response = userService.save(dto);

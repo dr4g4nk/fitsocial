@@ -63,7 +63,7 @@ private final FileStorageService fileStorageService;
             }
         };
 
-        CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+        CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.HOURS);
 
         HttpHeaders respHeaders = new HttpHeaders();
         respHeaders.set(HttpHeaders.CONTENT_TYPE, mediaType.toString());
