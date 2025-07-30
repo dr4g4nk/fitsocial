@@ -8,64 +8,58 @@ import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
-import org.unibl.etf.fitsocial.auth.user.UserDto;
 
 @Relation(collectionRelation = "items")
 public record ActivityDto(
 	Long id,
-	UserDto user,
 	@NotNull 
 	@Size(max = 50) 
-	String activityType,
+	String type,
 	@NotNull 
-	Instant activityDate,
-	Integer durationMinutes,
-	Double distanceKm,
-	Integer calories,
-	String description
+	Instant startTime,
+	Instant endTime,
+	Double distance,
+	Integer steps,
+	Integer calories
 ) implements IBasicDto {
 	@Relation(collectionRelation = "items")
     	public record Create(
-			Long id,
-			UserDto user,
 			@NotNull
 			@Size(max = 50)
-			String activityType,
+			String type,
 			@NotNull
-			Instant activityDate,
-			Integer durationMinutes,
-			Double distanceKm,
-			Integer calories,
-			String description
+			Instant startTime,
+			Instant endTime,
+			Double distance,
+			Integer steps,
+			Integer calories
 	) implements ICreateDto {}
 
     	@Relation(collectionRelation = "items")
     	public record Update(
-		Long id,
-		UserDto user,
-		@NotNull 
-		@Size(max = 50) 
-		String activityType,
-		@NotNull 
-		Instant activityDate,
-		Integer durationMinutes,
-		Double distanceKm,
-		Integer calories,
-		String description
+				Long id,
+				@NotNull
+				@Size(max = 50)
+				String type,
+				@NotNull
+				Instant startTime,
+				Instant endTime,
+				Double distance,
+				Integer steps,
+				Integer calories
 	) implements IUpdateDto {}
 
     	@Relation(collectionRelation = "items")
     	public record List(
-		Long id,
-		UserDto user,
-		@NotNull
-		@Size(max = 50)
-		String activityType,
-		@NotNull
-		Instant activityDate,
-		Integer durationMinutes,
-		Double distanceKm,
-		Integer calories,
-		String description
+				Long id,
+				@NotNull
+				@Size(max = 50)
+				String type,
+				@NotNull
+				Instant startTime,
+				Instant endTime,
+				Double distance,
+				Integer steps,
+				Integer calories
 	) implements IListDto {}
 }

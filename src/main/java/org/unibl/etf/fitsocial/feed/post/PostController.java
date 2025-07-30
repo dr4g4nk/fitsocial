@@ -50,38 +50,46 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
 
     @PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseDto<PostDto, Post>> create(@RequestPart("post") PostDto.Create dto, @RequestPart(value = "mediaFiles", required = false) java.util.List<MultipartFile> mediaFiles) {
-        var media = new ArrayList<MediaDto.Create>();
+        try {
+            var media = new ArrayList<MediaDto.Create>();
 
-        if (mediaFiles != null) {
-            for (int i = 0; i < mediaFiles.size(); i++) {
-                var m = mediaFiles.get(i);
-                media.add(new MediaDto.Create(0L, i, m.getContentType(), m, null));
+            if (mediaFiles != null) {
+                for (int i = 0; i < mediaFiles.size(); i++) {
+                    var m = mediaFiles.get(i);
+                    media.add(new MediaDto.Create(0L, i, m.getContentType(), m, null));
+                }
             }
+
+            var response = postService.save(new PostDto.Create(dto.content(), dto.isPublic(), media, dto.activity()));
+
+            if (response.isSuccess()) return ResponseEntity.ok(response);
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
-
-        var response = postService.save(new PostDto.Create(dto.content(), dto.isPublic(), media));
-
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return ResponseEntity.badRequest().body(response);
     }
 
     @PutMapping(path = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseDto<PostDto, Post>> update(@PathVariable Long id, @RequestPart("post") PostDto.Update dto, @RequestPart(value = "mediaOrder", required = false) java.util.List<Integer> mediaOrder, @RequestPart(value = "mediaFiles", required = false) java.util.List<MultipartFile> mediaFiles) {
-        var media = new ArrayList<MediaDto.Update>(dto.media());
-        if (mediaFiles != null) {
-            if (mediaOrder.size() != mediaFiles.size())
-                return ResponseEntity.badRequest().body(new ResponseDto<>("Param orders and files are not same size"));
+        try {
+            var media = new ArrayList<MediaDto.Update>(dto.media());
+            if (mediaFiles != null) {
+                if (mediaOrder.size() != mediaFiles.size())
+                    return ResponseEntity.badRequest().body(new ResponseDto<>("Param orders and files are not same size"));
 
-            for (int i = 0; i < mediaFiles.size(); i++) {
-                var m = mediaFiles.get(i);
-                media.add(new MediaDto.Update(0L, id, mediaOrder.get(i), m.getContentType(), m));
+                for (int i = 0; i < mediaFiles.size(); i++) {
+                    var m = mediaFiles.get(i);
+                    media.add(new MediaDto.Update(0L, id, mediaOrder.get(i), m.getContentType(), m));
+                }
             }
+
+            var response = postService.update(id, new PostDto.Update(dto.content(), dto.isPublic(), media, dto.activity()));
+
+            if (response.isSuccess()) return ResponseEntity.ok(response);
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
-
-        var response = postService.update(id, new PostDto.Update(dto.content(), dto.isPublic(), media));
-
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("/user/{id}")

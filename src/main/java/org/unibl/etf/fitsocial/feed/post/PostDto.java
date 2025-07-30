@@ -16,17 +16,17 @@ import org.unibl.etf.fitsocial.feed.media.MediaDto;
 public record PostDto(Long id, UserDto author, ActivityDto activity, String content, Boolean isPublic, Long likeCount,
                       Instant createdAt, java.util.List<MediaDto> media) implements IBasicDto {
     @Relation(collectionRelation = "items")
-    public record Create( String content, Boolean isPublic,
-                         java.util.List<MediaDto.Create> media) implements ICreateDto {
+    public record Create(String content, Boolean isPublic,
+                         java.util.List<MediaDto.Create> media, ActivityDto.Create activity) implements ICreateDto {
     }
 
     @Relation(collectionRelation = "items")
     public record Update(String content, Boolean isPublic,
-                         java.util.List<MediaDto.Update> media) implements IUpdateDto {
+                         java.util.List<MediaDto.Update> media, ActivityDto.Update activity) implements IUpdateDto {
     }
 
     @Relation(collectionRelation = "items")
     public record List(Long id, String content, UserDto author, Instant createdAt, Boolean isPublic, Long likeCount, Long commentCount, Boolean isLiked,
-                       java.util.List<MediaDto> media) implements IListDto {
+                       java.util.List<MediaDto> media, ActivityDto activity) implements IListDto {
     }
 }

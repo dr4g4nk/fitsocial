@@ -15,7 +15,6 @@ import org.unibl.etf.fitsocial.auth.user.User;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "activity", schema = "feed")
 public class Activity extends SoftDeletableEntity{
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -25,15 +24,17 @@ public class Activity extends SoftDeletableEntity{
     private User user;
     @Size(max = 50)
     @NotNull
-    @Column(name = "activity_type", length = 50)
-    private String activityType;
+    @Column(name = "type", length = 50)
+    private String type;
     @NotNull
-    @Column(name = "activity_date")
-    private Instant activityDate;
-    @Column(name = "duration_minutes")
-    private Integer durationMinutes;
-    @Column(name = "distance_km")
-    private Double distanceKm;
+    @Column(name = "start_time")
+    private Instant startTime;
+    @Column(name = "end_time")
+    private Instant endTime;
+    @Column(name = "distance")
+    private Double distance;
+    @Column(name = "steps")
+    private Integer steps;
     @Column(name = "calories")
     private Integer calories;
     @Column(name = "description")
@@ -61,38 +62,6 @@ public class Activity extends SoftDeletableEntity{
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public String getActivityType() {
-        return this.activityType;
-    }
-
-    public void setActivityType(String activityType) {
-        this.activityType = activityType;
-    }
-
-    public Instant getActivityDate() {
-        return this.activityDate;
-    }
-
-    public void setActivityDate(Instant activityDate) {
-        this.activityDate = activityDate;
-    }
-
-    public Integer getDurationMinutes() {
-        return this.durationMinutes;
-    }
-
-    public void setDurationMinutes(Integer durationMinutes) {
-        this.durationMinutes = durationMinutes;
-    }
-
-    public Double getDistanceKm() {
-        return this.distanceKm;
-    }
-
-    public void setDistanceKm(Double distanceKm) {
-        this.distanceKm = distanceKm;
     }
 
     public Integer getCalories() {
@@ -133,5 +102,45 @@ public class Activity extends SoftDeletableEntity{
 
     public void setDeletedAt(Instant deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Instant getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Instant startTime) {
+        this.startTime = startTime;
+    }
+
+    public Instant getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime = endTime;
+    }
+
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
+
+    public Integer getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Integer steps) {
+        this.steps = steps;
     }
 }

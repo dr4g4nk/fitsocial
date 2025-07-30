@@ -3,10 +3,11 @@ package org.unibl.etf.fitsocial.feed.post;
 import org.mapstruct.*;
 import core.mapper.IMapper;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
+import org.unibl.etf.fitsocial.feed.activity.ActivityMapper;
 import org.unibl.etf.fitsocial.feed.media.MediaMapper;
 import org.unibl.etf.fitsocial.feed.post.PostDto.List;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {UserMapper.class, MediaMapper.class})
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {UserMapper.class, MediaMapper.class, ActivityMapper.class})
 public interface PostMapper extends IMapper<
     Post,
     PostDto,

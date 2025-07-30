@@ -14,6 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.unibl.etf.fitsocial.auth.user.User;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
 import org.unibl.etf.fitsocial.entity.FileType;
+import org.unibl.etf.fitsocial.feed.activity.Activity;
+import org.unibl.etf.fitsocial.feed.activity.ActivityMapper;
+import org.unibl.etf.fitsocial.feed.activity.ActivityRepository;
 import org.unibl.etf.fitsocial.feed.comment.Comment;
 import org.unibl.etf.fitsocial.feed.comment.CommentDto;
 import org.unibl.etf.fitsocial.feed.comment.CommentMapper;
@@ -24,10 +27,7 @@ import org.unibl.etf.fitsocial.feed.media.MediaService;
 import org.unibl.etf.fitsocial.service.FileStorageService;
 
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,10 +37,12 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
     private final MediaService mediaService;
     private final MediaRepository mediaRepository;
     protected PostRepository postRepository;
+    private final ActivityRepository activityRepository;
     protected CommentMapper commentMapper;
     protected UserMapper userMapper;
+    private final ActivityMapper activityMapper;
 
-    public PostService(PostRepository postRepository, IMapper<Post, PostDto, PostDto.List, PostDto.Update, PostDto.Create> mapper, CommentMapper commentMapper, UserMapper userMapper, MediaMapper mediaMapper, MediaService mediaService, MediaRepository mediaRepository) {
+    public PostService(PostRepository postRepository, IMapper<Post, PostDto, PostDto.List, PostDto.Update, PostDto.Create> mapper, CommentMapper commentMapper, UserMapper userMapper, MediaMapper mediaMapper, MediaService mediaService, MediaRepository mediaRepository, ActivityRepository activityRepository, ActivityMapper activityMapper) {
         super(postRepository, mapper);
         this.postRepository = postRepository;
         this.commentMapper = commentMapper;
@@ -48,6 +50,8 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
         this.mediaMapper = mediaMapper;
         this.mediaService = mediaService;
         this.mediaRepository = mediaRepository;
+        this.activityRepository = activityRepository;
+        this.activityMapper = activityMapper;
     }
 
     @Override
@@ -60,7 +64,7 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
 
         var userId = userDetails.isPresent() ? userDetails.get().getId() : -1;
 
-        return new ResponseDto<>(new PageResponseDto<>(postRepository.findAllByDeletedAtIsNullAndPublic(onlyPublic, userId, pageable).map(pl -> new PostDto.List(pl.post.getId(), pl.post.getContent(), userMapper.toDto(pl.post.getUser()), pl.post.getCreatedAt(), pl.post.getIsPublic(), pl.post.getLikeCount(), 0L, pl.like != null ? pl.like.getActive() : false, pl.post.getMedia().stream().map(mediaMapper::toDto).toList()))));
+        return new ResponseDto<>(new PageResponseDto<>(postRepository.findAllByDeletedAtIsNullAndPublic(onlyPublic, userId, pageable).map(pl -> new PostDto.List(pl.post.getId(), pl.post.getContent(), userMapper.toDto(pl.post.getUser()), pl.post.getCreatedAt(), pl.post.getIsPublic(), pl.post.getLikeCount(), 0L, pl.like != null ? pl.like.getActive() : false, pl.post.getMedia().stream().map(mediaMapper::toDto).toList(), activityMapper.toDto(pl.post.getActivity()) ))));
     }
 
     public ResponseDto<PageResponseDto<PostDto.List>, Post> findAllByUserId(Long userId, Pageable pageable) {
@@ -79,7 +83,7 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
         Map<Long, java.util.List<CommentDto.List>> commentsByPostId = rawComments.stream().collect(Collectors.groupingBy(c -> c.getPost().getId(), Collectors.collectingAndThen(Collectors.toList(), list -> list.stream().sorted(Comparator.comparing(Comment::getCreatedAt).reversed()).limit(3).map(c -> commentMapper.toListDto(c)).toList())));
 
         // 4. Mapiraj rezultate u PostDto
-        var results = rawPosts.map(p -> new PostDto.List(p.getId(), p.getContent(), userMapper.toDto(p.getUser()), p.getCreatedAt(), p.getIsPublic(), p.getLikeCount(), 0L, false, null));
+        var results = rawPosts.map(p -> new PostDto.List(p.getId(), p.getContent(), userMapper.toDto(p.getUser()), p.getCreatedAt(), p.getIsPublic(), p.getLikeCount(), 0L, false, null, activityMapper.toDto(p.getActivity())));
 
 
         // 6. Vrati kao Page
@@ -90,7 +94,6 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
     public ResponseDto<PostDto, Post> update(Long id, PostDto.Update dto) {
         ResponseDto<PostDto, Post> response;
         try {
-
             var mediaIds = dto.media().stream().map(MediaDto.Update::id).filter(i -> i > 0).collect(Collectors.toList());
             mediaRepository.deleteByPostIdAndIdNotIn(id, mediaIds);
 
@@ -101,7 +104,19 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
                     mediaService.save(new MediaDto.Create(id, m.order(), m.mimeType(), m.file(), null));
             });
 
-            var res = super.update(id, new PostDto.Update(dto.content(), dto.isPublic(), null));
+            Activity activity = null;
+            if(dto.activity() != null) {
+                var activityOptional = activityRepository.findByIdAndDeletedAtIsNull(dto.activity().id());
+                if (activityOptional.isPresent()) {
+                    var activityEntity = activityMapper.partialUpdate(dto.activity(), activityOptional.get());
+                    activity = activityRepository.save(activityEntity);
+                }
+                else {
+                    var activityEntity = activityMapper.partialUpdate(dto.activity(), new Activity());
+                    activity = activityRepository.saveAndFlush(activityEntity);
+                }
+            }
+            var res = super.update(id, new PostDto.Update(dto.content(), dto.isPublic(), null, activityMapper.toUpdateDto(activity)));
             var updatedEntity = res.getEntity();
 
             response = new ResponseDto<>(mapper.toDto(updatedEntity), updatedEntity);
@@ -121,8 +136,14 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
         try {
             var userDetails = getUserDetails();
             var user = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
+
+            var activityEntity = activityMapper.fromCreateDto(dto.activity());
+            activityEntity.setUser(user);
+            var activity = activityRepository.saveAndFlush(activityEntity);
+
             var entity = mapper.fromCreateDto(dto);
             entity.setUser(user);
+            entity.setActivity(activity);
             var savedEntity = postRepository.save(entity);
 
             dto.media().forEach(mediaService::save);
@@ -146,7 +167,13 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
         try {
             var userDetails = getUserDetails();
             var user = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
+
+            var activityEntity = activityMapper.fromCreateDto(dto.activity());
+            activityEntity.setUser(user);
+            var activity = activityRepository.saveAndFlush(activityEntity);
+
             var entity = mapper.fromCreateDto(dto);
+            entity.setActivity(activity);
             entity.setUser(user);
             var savedEntity = postRepository.save(entity);
 
