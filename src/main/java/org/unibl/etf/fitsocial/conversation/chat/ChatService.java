@@ -26,6 +26,7 @@ import org.unibl.etf.fitsocial.conversation.message.*;
 import org.unibl.etf.fitsocial.conversation.message.projection.MessageWithChatId;
 import org.yaml.snakeyaml.util.Tuple;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,7 +72,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var chatId = chats.stream().map(Chat::getId).collect(Collectors.toList());
         var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatId, userId);
         var messages = messageRepository.findLastMessagesForChats(chatId).stream()
-                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
+                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> v.getSender() + (v.getLabel() != null ? " " + v.getLabel().toLowerCase() : ": " + v.getContent())));
 
         var result = chats.stream().map(c ->
                 new ChatDto.List(
@@ -80,7 +81,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
                                 ? c.getSubject()
                                 : chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId()))
                                 .map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName()).collect(Collectors.joining(", ")),
-                        messages.get(c.getId()) != null ? messages.get(c.getId())._1() : "",
+                        messages.get(c.getId()) != null ? messages.get(c.getId()) : "",
                         c.getLastMessageTime(),
                         chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList()))).collect(Collectors.toList());
 
@@ -103,7 +104,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var chatList = Collections.singletonList(chat.getId());
         var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatList, userId);
         var messages = messageRepository.findLastMessagesForChats(chatList).stream()
-                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> new Tuple<>(v.getContent(), v.getUpdatedAt())));
+                .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> v.getSender() + (v.getLabel() != null ? " " + v.getLabel().toLowerCase() : ": " + v.getContent())));
         return new ResponseDto<>(
                 new ChatDto(
                         chat.getId(),
@@ -112,7 +113,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
                                 : chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId()))
                                 .map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName())
                                 .collect(Collectors.joining(", ")),
-                        messages.get(chat.getId()) != null ? messages.get(chat.getId())._1() : "",
+                        messages.get(chat.getId()) != null ? messages.get(chat.getId()) : "",
                         chat.getLastMessageTime(),
                         chatUsers.stream().filter(cu -> chat.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList())));
     }
@@ -124,12 +125,12 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
             var entity = mapper.fromCreateDto(dto);
             var usersId = new ArrayList<>(dto.userIds());
             var isGroup = usersId.size() > 1;
-
+/*
             if (entity.getSubject() == null || entity.getSubject().isBlank()) {
                 var name = userRepository.findAllByIdInAndDeletedAtIsNull(usersId).stream().map(isGroup ? User::getFirstName : user -> user.getFirstName() + " " + user.getLastName()).collect(Collectors.joining(", "));
                 entity.setSubject(name);
             }
-
+*/
             var userDetails = getUserDetails();
             var currentUser = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
             entity.setCreatedBy(currentUser);

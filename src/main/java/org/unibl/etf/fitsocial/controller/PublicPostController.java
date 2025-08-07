@@ -106,7 +106,7 @@ public class PublicPostController {
             var contentType = user.getProfileImageContentType();
             Resource resource = fileStorageService.loadAsResource(user.getProfileImageUrl());
 
-            CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+            CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.HOURS);
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .cacheControl(cacheControl)

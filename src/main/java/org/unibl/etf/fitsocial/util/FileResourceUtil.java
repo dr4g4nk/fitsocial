@@ -19,7 +19,7 @@ private final FileStorageService fileStorageService;
         this.fileStorageService = fileStorageService;
     }
 
-    private static final int BUFFER_SIZE = 64 * 1024; // 64 KB
+    private static final int BUFFER_SIZE = 1024 * 1024;
 
     public  ResourceResponse getResourceResponse(String uri, String mimeType, List<HttpRange> ranges, int bufferSize) throws IOException {
         Resource resource = fileStorageService.loadAsResource(uri);
@@ -31,16 +31,36 @@ private final FileStorageService fileStorageService;
         long start, end = fileSize - 1;
         HttpStatus status = HttpStatus.OK;
 
-        if (isVideo && !ranges.isEmpty()) {
-            HttpRange range = ranges.getFirst();
-            start = range.getRangeStart(fileSize);
-            end = range.getRangeEnd(fileSize);
+        HttpHeaders respHeaders = new HttpHeaders();
+        respHeaders.set(HttpHeaders.CONTENT_TYPE, mediaType.toString());
+        respHeaders.set(HttpHeaders.ACCEPT_RANGES, "bytes");
+
+        respHeaders.setCacheControl(CacheControl.maxAge(5, TimeUnit.HOURS));
+
+        if (isVideo){
             status = HttpStatus.PARTIAL_CONTENT;
-        } else {
+
+            if(ranges != null && !ranges.isEmpty()) {
+                HttpRange range = ranges.getFirst();
+                start = Math.min(range.getRangeStart(fileSize), fileSize - 1);
+                end = Math.min(range.getRangeEnd(fileSize), fileSize - 1);
+            }
+            else {
+                start = 0;
+                end = Math.min(BUFFER_SIZE - 1, fileSize - 1);
+            }
+
+            respHeaders.set(
+                    HttpHeaders.CONTENT_RANGE,
+                    String.format("bytes %d-%d/%d", start, end, fileSize)
+            );
+        }
+        else {
             start = 0;
         }
 
         long contentLength = end - start + 1;
+        respHeaders.setContentLength(contentLength);
 
         var byteBufferSize = bufferSize > 0 ? bufferSize : BUFFER_SIZE;
 
@@ -62,21 +82,6 @@ private final FileStorageService fileStorageService;
                 }
             }
         };
-
-        CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.HOURS);
-
-        HttpHeaders respHeaders = new HttpHeaders();
-        respHeaders.set(HttpHeaders.CONTENT_TYPE, mediaType.toString());
-        respHeaders.set(HttpHeaders.ACCEPT_RANGES, "bytes");
-        respHeaders.setContentLength(contentLength);
-        respHeaders.setCacheControl(cacheControl);
-
-        if (status == HttpStatus.PARTIAL_CONTENT) {
-            respHeaders.set(
-                    HttpHeaders.CONTENT_RANGE,
-                    String.format("bytes %d-%d/%d", start, end, fileSize)
-            );
-        }
 
         return new ResourceResponse(body, respHeaders, status);
     }

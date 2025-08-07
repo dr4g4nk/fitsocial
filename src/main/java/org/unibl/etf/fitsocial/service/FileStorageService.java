@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.unibl.etf.fitsocial.configuration.FileStorageProperties;
 import org.unibl.etf.fitsocial.entity.FileType;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
@@ -45,9 +46,23 @@ public class FileStorageService {
 
             Path target = targetDir.resolve(filename);
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
             return target.toAbsolutePath().toString();
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file " + filename, e);
+        }
+    }
+
+    public String storeThumbnail(String videoUri){
+        var targetFile = new File(videoUri);
+        try {
+            var thumbnailDir = baseLocation.resolve(FileType.THUMBNAIL.getFolderName());
+            Files.createDirectories(thumbnailDir);
+            return VideoThumbnailGenerator.generateThumbnail(targetFile, new File(thumbnailDir.toUri()), 1);
+        }catch (IOException e) {
+            throw new RuntimeException("Failed to store file ", e);
+        }catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

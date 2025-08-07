@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -52,6 +53,7 @@ public class Post extends SoftDeletableEntity{
             mappedBy = "post"
     )
     @SQLRestriction("deleted_at IS NULL")
+    @SQLOrder("order")
     private List<Media> media = new ArrayList<>();
 
     // Getteri i setteri

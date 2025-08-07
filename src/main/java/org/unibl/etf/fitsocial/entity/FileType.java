@@ -4,7 +4,8 @@ public enum FileType {
     IMAGE("IMAGE"),
     VIDEO("VIDEO"),
     DOCUMENT("DOCUMENT"),
-    PROFILE("PROFILE"),;
+    PROFILE("PROFILE"),
+    THUMBNAIL("THUMBNAIL");
 
     private final String folderName;
     FileType(String folderName) { this.folderName = folderName; }

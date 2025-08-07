@@ -27,6 +27,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -113,18 +114,24 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
     private static final int CHUNK_SIZE = 1024 * 1024; // 1 MB
 
     @GetMapping("/media/{mediaId}/stream")
-    public ResponseEntity<StreamingResponseBody> stream(@PathVariable Long mediaId, @RequestHeader HttpHeaders headers) throws IOException {
-        var resp = mediaService.findById(mediaId);
-        if (!resp.isSuccess()) {
-            return ResponseEntity.notFound().build();
-        }
-        var media = resp.getEntity();
+    public ResponseEntity<StreamingResponseBody> stream(@PathVariable Long mediaId, @RequestParam(required = false, defaultValue = "false") Boolean thumbnail, @RequestHeader HttpHeaders headers) throws IOException {
+      try {
+          var resp = mediaService.findById(mediaId);
+          if (!resp.isSuccess()) {
+              return ResponseEntity.notFound().build();
+          }
+          var media = resp.getEntity();
+          var uri = !thumbnail ? media.getMediaUrl() : media.getThumbnailUrl();
+          var mimeType = !thumbnail ? media.getMimeType() : MediaType.IMAGE_JPEG_VALUE;
 
-        var util = new FileResourceUtil(fileStorageService);
+          var util = new FileResourceUtil(fileStorageService);
+          var res = util.getResourceResponse(uri, mimeType, headers.getRange(), 0);
 
-        var res = util.getResourceResponse(media.getMediaUrl(), media.getMimeType(), headers.getRange(), 0);
+          return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
+      } catch (Exception e){
 
-        return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
+          return ResponseEntity.badRequest().build();
+      }
     }
 
 

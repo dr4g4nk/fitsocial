@@ -12,7 +12,8 @@ import java.util.List;
 public interface MessageRepository extends BaseSoftDeletableRepository<Message, Long> {
 
     @Query("""
-            select m.id as id, m.content as content, m.chatUser.chat.id as chatId, m.updatedAt as updatedAt from Message m where m.id in (
+            select m.id as id, m.content as content, m.chatUser.chat.id as chatId, m.label as label, m.chatUser.user.firstName as sender
+            from Message m where m.id in (
             select MAX(m2.id) from Message m2
             where m2.chatUser.chat.id in :chatId and m2.deletedAt is null
             group by m2.chatUser.chat.id

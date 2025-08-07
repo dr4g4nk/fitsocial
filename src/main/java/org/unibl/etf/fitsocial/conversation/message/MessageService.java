@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -113,15 +114,17 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                 var userIds = chatUsers.stream().map(cu -> cu.getUser().getId()).toList();
                 var tokens = fcmTokenRepository.findAllByUserIdInLatest(userIds);
 
-                String subject;
+                String subject = chatUser.getChat().getSubject();
 
-                if (userIds.size() > 1) {
-                    subject = chatUsers.stream().findFirst().get().getChat().getSubject();
-                } else {
-                    subject = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName();
+                if (subject == null || subject.isBlank()) {
+                    if (userIds.size() > 1) {
+                        subject = chatUsers.stream().map(cu -> cu.getUser().getFirstName()).collect(Collectors.joining(", "));
+                    } else {
+                        subject = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName();
+                    }
                 }
 
-                messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.my(), messageDto.attachment(),chatUser.getChat().getSubject(), isGroup);
+                messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.my(), messageDto.attachment(), chatUser.getChat().getSubject(), isGroup);
                 var hasMedia = hasVideo || hasImage;
 
                 MessageDto finalMessageDto = messageDto;

@@ -41,6 +41,10 @@ public class MediaService extends BaseSoftDeletableServiceImpl<
         Media entity = mapper.fromCreateDto(dto);
         var fileType = dto.mimeType().startsWith("video/") ? FileType.VIDEO : FileType.IMAGE;
         var path = fileStorageService.store(dto.file(), fileType);
+        if(fileType.equals(FileType.VIDEO)){
+            var thumbnailPath = fileStorageService.storeThumbnail(path);
+            entity.setThumbnailUrl(thumbnailPath);
+        }
         entity.setMediaUrl(path);
 
         var savedEntity = repository.save(entity);

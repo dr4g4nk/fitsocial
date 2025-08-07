@@ -40,6 +40,10 @@ public class AttachmentService extends BaseSoftDeletableServiceImpl<
         var attachment = mapper.fromCreateDto(dto);
 
         var path = fileStorageService.store(dto.file(), fileType);
+        if(fileType.equals(FileType.VIDEO)){
+            var thumbnailPath = fileStorageService.storeThumbnail(path);
+            attachment.setThumbnailUrl(thumbnailPath);
+        }
         attachment.setFileUrl(path);
 
         var savedEntity = repository.save(attachment);

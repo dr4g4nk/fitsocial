@@ -6,7 +6,8 @@ public interface MessageWithChatId {
     Long getId();
     String getContent();
     Long getChatId();
-    Instant getUpdatedAt();
+    String getLabel();
+    String getSender();
 
     MessageWithChatId Instance = new MessageWithChatId() {
         @Override
@@ -25,8 +26,15 @@ public interface MessageWithChatId {
         }
 
         @Override
-        public Instant getUpdatedAt() {
-            return null;
+        public String getLabel() {
+            return "";
         }
+
+        @Override
+        public String getSender() {
+            return "";
+        }
+
+
     };
 }

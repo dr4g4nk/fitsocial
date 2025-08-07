@@ -14,7 +14,6 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "media", schema = "feed")
 public class Media extends SoftDeletableEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -26,6 +25,8 @@ public class Media extends SoftDeletableEntity {
     @NotNull
     @Column(name = "media_url", length = 500)
     private String mediaUrl;
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
     @Column(name = "order_id")
     private Integer order;
     @CreatedDate
@@ -102,5 +103,13 @@ public class Media extends SoftDeletableEntity {
 
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

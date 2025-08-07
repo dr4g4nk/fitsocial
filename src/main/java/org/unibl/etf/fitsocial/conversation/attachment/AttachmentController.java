@@ -1,6 +1,7 @@
 package org.unibl.etf.fitsocial.conversation.attachment;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import core.controller.BaseController;
@@ -32,17 +33,18 @@ public class AttachmentController extends BaseController<
     }
 
     @GetMapping("/{id}/stream")
-    public ResponseEntity<StreamingResponseBody> stream(@PathVariable Long id, @RequestHeader HttpHeaders headers) throws IOException {
+    public ResponseEntity<StreamingResponseBody> stream(@PathVariable Long id, @RequestParam(required = false, defaultValue = "false") Boolean thumbnail, @RequestHeader HttpHeaders headers) throws IOException {
         try {
             var resp = service.findById(id);
             if (!resp.isSuccess()) {
                 return ResponseEntity.notFound().build();
             }
             var attachment = resp.getEntity();
+            var uri = !thumbnail ? attachment.getFileUrl() : attachment.getThumbnailUrl();
+            var mimeType = !thumbnail ? attachment.getContentType() : MediaType.IMAGE_JPEG_VALUE;
 
             var util = new FileResourceUtil(fileStorageService);
-
-            var res = util.getResourceResponse(attachment.getFileUrl(), attachment.getContentType(), headers.getRange(), 0);
+            var res = util.getResourceResponse(uri, mimeType, headers.getRange(), 0);
 
             return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
         } catch (Exception e){

@@ -23,6 +23,8 @@ public class Attachment extends SoftDeletableEntity {
     private String contentType;
     @Column(name = "file_url")
     private String fileUrl;
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
     @NotNull
     @CreatedDate
     @Column(name = "created_at")
@@ -91,5 +93,13 @@ public class Attachment extends SoftDeletableEntity {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

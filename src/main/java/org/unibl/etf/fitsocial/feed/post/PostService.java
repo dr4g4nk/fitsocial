@@ -168,12 +168,15 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
             var userDetails = getUserDetails();
             var user = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
 
-            var activityEntity = activityMapper.fromCreateDto(dto.activity());
-            activityEntity.setUser(user);
-            var activity = activityRepository.saveAndFlush(activityEntity);
-
             var entity = mapper.fromCreateDto(dto);
-            entity.setActivity(activity);
+            if(dto.activity() != null) {
+                var activityEntity = activityMapper.fromCreateDto(dto.activity());
+                activityEntity.setUser(user);
+                var activity = activityRepository.saveAndFlush(activityEntity);
+
+                entity.setActivity(activity);
+            }
+
             entity.setUser(user);
             var savedEntity = postRepository.save(entity);
 
