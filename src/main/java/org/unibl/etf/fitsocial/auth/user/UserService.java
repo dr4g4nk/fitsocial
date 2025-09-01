@@ -2,16 +2,15 @@ package org.unibl.etf.fitsocial.auth.user;
 
 import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
+import core.mapper.IMapper;
+import core.repository.BaseSoftDeletableRepository;
+import core.service.BaseSoftDeletableServiceImpl;
 import core.util.CurrentUserDetails;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.annotation.Transactional;
-import core.mapper.IMapper;
-import core.repository.BaseSoftDeletableRepository;
-import core.service.BaseSoftDeletableServiceImpl;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.unibl.etf.fitsocial.auth.FcmTokenDto;
 import org.unibl.etf.fitsocial.auth.fcmtoken.FcmToken;
@@ -27,10 +26,7 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
     private UserRepository userRepository;
     private FcmTokenRepository fcmTokenRepository;
 
-    public UserService(BaseSoftDeletableRepository<User, Long> repository,
-                       PasswordEncoder passwordEncoder,
-                       UserRepository userRepository,
-                       IMapper<User, UserDto, UserDto.List, UserDto.Update, UserDto.Create> mapper, FcmTokenRepository fcmTokenRepository) {
+    public UserService(BaseSoftDeletableRepository<User, Long> repository, PasswordEncoder passwordEncoder, UserRepository userRepository, IMapper<User, UserDto, UserDto.List, UserDto.Update, UserDto.Create> mapper, FcmTokenRepository fcmTokenRepository) {
         super(repository, mapper);
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -47,7 +43,7 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
             if (userRepository.existsByEmailAndDeletedAtIsNull(dto.email()))
                 return new ResponseDto<>("Email already exists");
 
-            UserDto.Create newDto = new UserDto.Create(dto.firstName(), dto.lastName(), dto.username(), dto.email(), passwordEncoder.encode(dto.password()));
+            UserDto.Create newDto = new UserDto.Create(dto.firstName(), dto.lastName(), dto.username() != null && !dto.username().isBlank() ? dto.username() : dto.email(), dto.email(), passwordEncoder.encode(dto.password()));
 
             response = super.save(newDto);
             var user = response.getEntity();
@@ -64,22 +60,21 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
         return response;
     }
 
-    public void saveFcmToken(FcmTokenDto dto){
+    public void saveFcmToken(FcmTokenDto dto) {
         var userDetails = getUserDetails();
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
         var user = entityManager.getReference(User.class, userId);
 
         var optToken = fcmTokenRepository.findByToken(dto.token());
-        if(optToken.isPresent()){
+        if (optToken.isPresent()) {
             var fcmToken = optToken.get();
-            if(!userId.equals(fcmToken.getUser().getId())){
+            if (!userId.equals(fcmToken.getUser().getId())) {
                 fcmToken.setUser(user);
                 fcmToken.setTimestamp(Instant.now());
 
                 fcmTokenRepository.save(fcmToken);
             }
-        }
-        else{
+        } else {
             var fcmToken = new FcmToken();
             fcmToken.setToken(dto.token());
             fcmToken.setUser(user);
@@ -89,12 +84,12 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
         }
     }
 
-    public void removeFcmToken(FcmTokenDto dto){
+    public void removeFcmToken(FcmTokenDto dto) {
         var userDetails = getUserDetails();
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
 
         var optToken = fcmTokenRepository.findByToken(dto.token());
-        if(optToken.isPresent()){
+        if (optToken.isPresent()) {
             fcmTokenRepository.deleteByToken(dto.token());
         }
     }
@@ -105,7 +100,7 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
         return new ResponseDto<>(new PageResponseDto<>(res.map(mapper::toListDto)));
     }
 
-    public void logout(FcmTokenDto tokenDto){
+    public void logout(FcmTokenDto tokenDto) {
         var userDetails = getUserDetails();
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
 

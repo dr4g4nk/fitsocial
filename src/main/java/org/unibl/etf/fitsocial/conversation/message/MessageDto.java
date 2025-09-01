@@ -1,19 +1,15 @@
 package org.unibl.etf.fitsocial.conversation.message;
 
-import org.springframework.hateoas.server.core.Relation;
 import core.dto.IBasicDto;
 import core.dto.ICreateDto;
 import core.dto.IListDto;
 import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
-
-import java.time.Instant;
-import java.util.List;
-
+import org.springframework.hateoas.server.core.Relation;
 import org.unibl.etf.fitsocial.auth.user.UserDto;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
-import org.unibl.etf.fitsocial.conversation.chat.ChatDto;
-import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserDto;
+
+import java.time.Instant;
 
 @Relation(collectionRelation = "items")
 public record MessageDto(
@@ -23,6 +19,8 @@ public record MessageDto(
         @NotNull
         String content,
         String label,
+        Instant createdAt,
+        Instant updatedAt,
         Boolean my, AttachmentDto attachment,
         String subject,
         Boolean isGroup

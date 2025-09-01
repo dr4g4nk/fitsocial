@@ -5,10 +5,11 @@ import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
 import core.service.BaseSoftDeletableServiceImpl;
 import core.util.CurrentUserDetails;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,14 +23,7 @@ import org.unibl.etf.fitsocial.service.FileStorageService;
 import org.unibl.etf.fitsocial.util.FileResourceUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/post")
@@ -52,6 +46,9 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
     @PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseDto<PostDto, Post>> create(@RequestPart("post") PostDto.Create dto, @RequestPart(value = "mediaFiles", required = false) java.util.List<MultipartFile> mediaFiles) {
         try {
+            if ((dto.content() == null || dto.content().isBlank()) && mediaFiles.isEmpty())
+                return ResponseEntity.badRequest().build();
+
             var media = new ArrayList<MediaDto.Create>();
 
             if (mediaFiles != null) {
@@ -115,23 +112,23 @@ public class PostController extends BaseController<Post, PostDto, PostDto.List, 
 
     @GetMapping("/media/{mediaId}/stream")
     public ResponseEntity<StreamingResponseBody> stream(@PathVariable Long mediaId, @RequestParam(required = false, defaultValue = "false") Boolean thumbnail, @RequestHeader HttpHeaders headers) throws IOException {
-      try {
-          var resp = mediaService.findById(mediaId);
-          if (!resp.isSuccess()) {
-              return ResponseEntity.notFound().build();
-          }
-          var media = resp.getEntity();
-          var uri = !thumbnail ? media.getMediaUrl() : media.getThumbnailUrl();
-          var mimeType = !thumbnail ? media.getMimeType() : MediaType.IMAGE_JPEG_VALUE;
+        try {
+            var resp = mediaService.findById(mediaId);
+            if (!resp.isSuccess()) {
+                return ResponseEntity.notFound().build();
+            }
+            var media = resp.getEntity();
+            var uri = !thumbnail ? media.getMediaUrl() : media.getThumbnailUrl();
+            var mimeType = !thumbnail ? media.getMimeType() : MediaType.IMAGE_JPEG_VALUE;
 
-          var util = new FileResourceUtil(fileStorageService);
-          var res = util.getResourceResponse(uri, mimeType, headers.getRange(), 0);
+            var util = new FileResourceUtil(fileStorageService);
+            var res = util.getResourceResponse(uri, mimeType, headers.getRange(), 0);
 
-          return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
-      } catch (Exception e){
+            return new ResponseEntity<>(res.getBody(), res.getRespHeaders(), res.getStatus());
+        } catch (Exception e) {
 
-          return ResponseEntity.badRequest().build();
-      }
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 

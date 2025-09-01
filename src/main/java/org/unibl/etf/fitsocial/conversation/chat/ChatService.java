@@ -8,6 +8,7 @@ import core.mapper.IMapper;
 import core.service.BaseSoftDeletableServiceImpl;
 import core.util.CurrentUserDetails;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.NoTransactionException;
@@ -22,13 +23,12 @@ import org.unibl.etf.fitsocial.conversation.attachment.Attachment;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentService;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUser;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserRepository;
-import org.unibl.etf.fitsocial.conversation.message.*;
+import org.unibl.etf.fitsocial.conversation.message.Message;
+import org.unibl.etf.fitsocial.conversation.message.MessageMapper;
+import org.unibl.etf.fitsocial.conversation.message.MessageRepository;
 import org.unibl.etf.fitsocial.conversation.message.projection.MessageWithChatId;
-import org.yaml.snakeyaml.util.Tuple;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -40,12 +40,12 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
     protected ChatUserRepository chatUserRepository;
     protected UserRepository userRepository;
     private final MessageRepository messageRepository;
-    private AttachmentService attachmentService;
-    private FirebaseNotificationService notificationService;
+    private final AttachmentService attachmentService;
+    private final FirebaseNotificationService notificationService;
     private final FcmTokenRepository fcmTokenRepository;
     private final ObjectMapper objectMapper;
 
-    private MessageMapper messageMapper;
+    private final MessageMapper messageMapper;
 
     @Value("base.url")
     private String BASE_URL;
@@ -69,12 +69,17 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
 
         var chats = repository.findAllChatsByUserId(userId, pageable);
+        var result = mapChats(chats, userId);
+        return new ResponseDto<>(new PageResponseDto<>(result, chats.getNumber(), chats.getSize(), chats.getTotalElements(), chats.getTotalPages()));
+    }
+
+    private java.util.List<ChatDto.List> mapChats(Page<Chat> chats, Long userId) {
         var chatId = chats.stream().map(Chat::getId).collect(Collectors.toList());
         var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatId, userId);
         var messages = messageRepository.findLastMessagesForChats(chatId).stream()
                 .collect(Collectors.toMap(MessageWithChatId::getChatId, v -> v.getSender() + (v.getLabel() != null ? " " + v.getLabel().toLowerCase() : ": " + v.getContent())));
 
-        var result = chats.stream().map(c ->
+        return chats.stream().map(c ->
                 new ChatDto.List(
                         c.getId(),
                         chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).count() > 1
@@ -85,7 +90,6 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
                         c.getLastMessageTime(),
                         chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList()))).collect(Collectors.toList());
 
-        return new ResponseDto<>(new PageResponseDto<>(result, chats.getNumber(), chats.getSize(), chats.getTotalElements(), chats.getTotalPages()));
     }
 
     @Override
@@ -221,10 +225,8 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         var userId = userDetails.orElse(new CurrentUserDetails()).getId();
 
         var chats = repository.findAllChatsByUserIdAndName(userId, value, pageable);
-        var chatId = chats.stream().map(Chat::getId).collect(Collectors.toList());
-        var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(chatId, userId);
 
-        var result = chats.stream().map(c -> new ChatDto.List(c.getId(), chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).count() > 1 ? c.getSubject() : chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> cu.getUser().getFirstName() + " " + cu.getUser().getLastName()).collect(Collectors.joining(", ")), null, null, chatUsers.stream().filter(cu -> c.getId().equals(cu.getChat().getId())).map(cu -> new UserDto(cu.getUser().getId(), cu.getUser().getFirstName(), cu.getUser().getLastName())).collect(Collectors.toList()))).collect(Collectors.toList());
+        var result = mapChats(chats, userId);
 
         return new ResponseDto<>(new PageResponseDto<>(result, chats.getNumber(), chats.getSize(), chats.getTotalElements(), chats.getTotalPages()));
     }

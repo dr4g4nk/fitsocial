@@ -33,8 +33,8 @@ public interface PostRepository extends BaseSoftDeletableRepository<Post, Long> 
             where p.id = :aLong and p.deletedAt is null and (p.isPublic = true or p.isPublic = :onlyPublic)""")
     boolean existsByIdAndDeletedAtIsNullAndIsPublicTrueOrIsPublicEquals(@Param("aLong") Long aLong, boolean onlyPublic);
 
-    @Query("select p from Post p left join Like l on l.post.id = p.id and l.user.id = :userId where p.user.id = :userId and p.deletedAt is null")
-    Page<Post> findAllByUserIdAndDeletedAtIsNull(@Param("userId") Long userId, Pageable pageable);
+    @Query("select p, l from Post p left join Like l on l.post.id = p.id and l.user.id = :userId where p.user.id = :userId and p.deletedAt is null")
+    Page<PostWithUserLike> findAllByUserIdAndDeletedAtIsNull(@Param("userId") Long userId, Pageable pageable);
 
     Boolean existsByIdAndUserIdAndDeletedAtIsNull(@Param("id")Long id, @Param("userId") Long userId);
 }

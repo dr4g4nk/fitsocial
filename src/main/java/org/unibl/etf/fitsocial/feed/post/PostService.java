@@ -13,7 +13,6 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.multipart.MultipartFile;
 import org.unibl.etf.fitsocial.auth.user.User;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
-import org.unibl.etf.fitsocial.entity.FileType;
 import org.unibl.etf.fitsocial.feed.activity.Activity;
 import org.unibl.etf.fitsocial.feed.activity.ActivityMapper;
 import org.unibl.etf.fitsocial.feed.activity.ActivityRepository;
@@ -24,10 +23,11 @@ import org.unibl.etf.fitsocial.feed.media.MediaDto;
 import org.unibl.etf.fitsocial.feed.media.MediaMapper;
 import org.unibl.etf.fitsocial.feed.media.MediaRepository;
 import org.unibl.etf.fitsocial.feed.media.MediaService;
-import org.unibl.etf.fitsocial.service.FileStorageService;
 
-import java.time.Instant;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,7 +68,7 @@ public class PostService extends BaseSoftDeletableServiceImpl<Post, PostDto, Pos
     }
 
     public ResponseDto<PageResponseDto<PostDto.List>, Post> findAllByUserId(Long userId, Pageable pageable) {
-        return new ResponseDto<>(new PageResponseDto<>(postRepository.findAllByUserIdAndDeletedAtIsNull(userId, pageable).map(mapper::toListDto)));
+        return new ResponseDto<>(new PageResponseDto<>(postRepository.findAllByUserIdAndDeletedAtIsNull(userId, pageable).map(pl -> new PostDto.List(pl.post.getId(), pl.post.getContent(), userMapper.toDto(pl.post.getUser()), pl.post.getCreatedAt(), pl.post.getIsPublic(), pl.post.getLikeCount(), 0L, pl.like != null ? pl.like.getActive() : false, pl.post.getMedia().stream().map(mediaMapper::toDto).toList(), activityMapper.toDto(pl.post.getActivity()) ))));
     }
 
     public ResponseDto<PageResponseDto<PostDto.List>, Post> findPublicPostsWithLikesAndComments(Pageable pageable, boolean onlyPublic) {

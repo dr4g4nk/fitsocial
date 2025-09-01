@@ -1,19 +1,17 @@
 package org.unibl.etf.fitsocial.conversation.chat;
 
-import jakarta.validation.constraints.Size;
-import org.springframework.hateoas.server.core.Relation;
 import core.dto.IBasicDto;
 import core.dto.ICreateDto;
 import core.dto.IListDto;
 import core.dto.IUpdateDto;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.hateoas.server.core.Relation;
+import org.unibl.etf.fitsocial.auth.user.UserDto;
+import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
-
-import org.unibl.etf.fitsocial.auth.user.UserDto;
-import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
 
 @Relation(collectionRelation = "items")
 public record ChatDto(Long id, String subject, String text, Instant lastMessageTime,

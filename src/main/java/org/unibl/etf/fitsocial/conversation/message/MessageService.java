@@ -2,7 +2,6 @@ package org.unibl.etf.fitsocial.conversation.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.gson.Gson;
 import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
 import core.mapper.IMapper;
@@ -20,16 +19,11 @@ import org.unibl.etf.fitsocial.auth.fcmtoken.FcmTokenRepository;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
 import org.unibl.etf.fitsocial.conversation.attachment.Attachment;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
-import org.unibl.etf.fitsocial.conversation.attachment.AttachmentMapper;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentService;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserRepository;
-import org.unibl.etf.fitsocial.entity.FileType;
-import org.unibl.etf.fitsocial.service.FileStorageService;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,9 +34,9 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
     protected ChatUserRepository chatUserRepository;
     protected MessageRepository messageRepository;
     protected MessageMapper messageMapper;
-    private UserMapper userMapper;
-    private AttachmentService attachmentService;
-    private FirebaseNotificationService notificationService;
+    private final UserMapper userMapper;
+    private final AttachmentService attachmentService;
+    private final FirebaseNotificationService notificationService;
     private final FcmTokenRepository fcmTokenRepository;
     private final ObjectMapper objectMapper;
 
@@ -97,9 +91,6 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                         label = "Šalje video";
                     else if (hasImage)
                         label = "Šalje sliku";
-                    if (isGroup) {
-                        label = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName() + " " + label.toLowerCase();
-                    }
                     entity.setLabel(label);
                 }
 
@@ -108,7 +99,7 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                 entityManager.refresh(message);
 
                 var messageDto = mapper.toDto(message);
-                response = new ResponseDto<MessageDto, Message>(messageDto, message);
+
 
                 var chatUsers = chatUserRepository.findAllByChatIdInAndNotUserId(Collections.singletonList(dto.chatId()), userId);
                 var userIds = chatUsers.stream().map(cu -> cu.getUser().getId()).toList();
@@ -124,7 +115,9 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                     }
                 }
 
-                messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.my(), messageDto.attachment(), chatUser.getChat().getSubject(), isGroup);
+                messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.createdAt(), messageDto.updatedAt(), true, messageDto.attachment(), chatUser.getChat().getSubject(), isGroup);
+                response = new ResponseDto<MessageDto, Message>(messageDto, message);
+
                 var hasMedia = hasVideo || hasImage;
 
                 MessageDto finalMessageDto = messageDto;
