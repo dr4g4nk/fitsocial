@@ -7,7 +7,6 @@ import core.service.BaseSoftDeletableServiceImpl;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.unibl.etf.fitsocial.auth.FcmTokenDto;
@@ -53,23 +52,25 @@ public class UserController extends BaseController<
     public void logout(@RequestBody FcmTokenDto fcmTokenDto){
         try{
             userService.logout(fcmTokenDto);
-        } catch (Exception e){ }
+        } catch (Exception ignored){ }
     }
 
     @GetMapping("/{id}/avatar")
     public ResponseEntity<Resource> getUserAvatar(@PathVariable Long id) {
         var response = userService.findById(id);
         if(response.isSuccess() && response.getEntity() != null) {
-            var user = response.getEntity();
-            var contentType = user.getProfileImageContentType();
-            Resource resource = fileStorageService.loadAsResource(user.getProfileImageUrl());
+            try {
+                var user = response.getEntity();
+                var contentType = user.getProfileImageContentType();
+                Resource resource = fileStorageService.loadAsResource(user.getProfileImageUrl());
 
-            CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.HOURS);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .cacheControl(cacheControl)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
+                CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.HOURS);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .cacheControl(cacheControl)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } catch (Exception ignored){}
         }
         return ResponseEntity.notFound().build();
     }

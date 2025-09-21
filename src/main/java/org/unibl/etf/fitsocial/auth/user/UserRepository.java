@@ -16,8 +16,8 @@ public interface UserRepository extends BaseSoftDeletableRepository<User,Long> {
     boolean existsByEmailAndDeletedAtIsNull(String email);
 
     @Query("""
-            select u from User u where lower(concat(u.firstName, ' ', u.lastName)) like lower(concat('%', :value, '%'))
+            select u from User u where u.id != :currentId and lower(concat(u.firstName, ' ', u.lastName)) like lower(concat('%', :value, '%'))
             """)
-    Page<User> findAllByTextFilter(@Param("value") String value, Pageable pageable);
+    Page<User> findAllByTextFilterWithoutCurrent(@Param("value") String value, @Param("currentId") Long currentId, Pageable pageable);
     
 }

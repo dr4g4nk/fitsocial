@@ -14,13 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.unibl.etf.fitsocial.FirebaseNotificationService;
 import org.unibl.etf.fitsocial.auth.fcmtoken.FcmTokenRepository;
 import org.unibl.etf.fitsocial.auth.user.UserMapper;
 import org.unibl.etf.fitsocial.conversation.attachment.Attachment;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentService;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserRepository;
+import org.unibl.etf.fitsocial.notification.FcmConfigs;
+import org.unibl.etf.fitsocial.notification.FirebaseNotificationService;
+import org.unibl.etf.fitsocial.notification.NotifikationData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -87,10 +89,8 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
 
                 if (hasAttachment) {
                     String label = "Šalje dokument";
-                    if (hasVideo)
-                        label = "Šalje video";
-                    else if (hasImage)
-                        label = "Šalje sliku";
+                    if (hasVideo) label = "Šalje video";
+                    else if (hasImage) label = "Šalje sliku";
                     entity.setLabel(label);
                 }
 
@@ -113,29 +113,40 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
                     } else {
                         subject = chatUser.getUser().getFirstName() + " " + chatUser.getUser().getLastName();
                     }
-                }
+                } else subject = "";
 
                 messageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.createdAt(), messageDto.updatedAt(), true, messageDto.attachment(), chatUser.getChat().getSubject(), isGroup);
                 response = new ResponseDto<MessageDto, Message>(messageDto, message);
 
                 var hasMedia = hasVideo || hasImage;
 
-                MessageDto finalMessageDto = messageDto;
+                MessageDto finalMessageDto = new MessageDto(messageDto.id(), messageDto.chatId(), messageDto.user(), messageDto.content(), messageDto.label(), messageDto.createdAt(), messageDto.updatedAt(), false, messageDto.attachment(), chatUser.getChat().getSubject(), isGroup);
+                ;
+                String body = hasMedia ? finalMessageDto.label() : finalMessageDto.content();
                 var data = new HashMap<String, String>();
-                data.put("data", objectMapper.writeValueAsString(messageDto));
+                data.put("data", objectMapper.writeValueAsString(finalMessageDto));
                 data.put("type", "chat_messages");
+                data.put("chatId", finalMessageDto.chatId().toString());
                 data.put("title", subject);
-                data.put("body", hasMedia ? finalMessageDto.label() : finalMessageDto.content());
+                data.put("body", body);
 
+                String finalSubject = subject;
+                String imageUrl = finalMessageDto.attachment() == null ? null : BASE_URL + "/api/attachment/" + finalMessageDto.attachment().id() + "/stream"
+                        + (finalMessageDto.attachment().contentType().startsWith("video") ? "?thumbnail=true" : "");
+
+
+                var notificationData = new NotifikationData(null, null, null, data);
+                var apnsConfig = FcmConfigs.buildApnsAlertConfig(finalSubject, body, "chat_messages", finalMessageDto.chatId().toString(), true, null, null, imageUrl, null);
+                var androidConfig = FcmConfigs.buildAndroidAlertConfig(finalSubject, body, "chat_channel", finalMessageDto.chatId().toString(), 86400000, "OPEN_CHAT", imageUrl);
+                var androidDataOnlyConfig = FcmConfigs.buildAndroidDataOnlyConfig(86400000, finalMessageDto.chatId().toString());
                 tokens.forEach(t -> {
                     try {
-                        notificationService.sendNotificationAsync(
-                                t,
-                                null, null,
-                                null,
-                                data);
-                    } catch (FirebaseMessagingException ignored) {
-
+                        notificationService.sendNotificationAsync(t, data,
+                                apnsConfig,
+                                androidDataOnlyConfig
+                        );
+                    } catch (FirebaseMessagingException e) {
+                        e.printStackTrace();
                     }
                 });
 
@@ -156,21 +167,13 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
     public ResponseDto<PageResponseDto<MessageDto.List>, Message> findAllByChatId(Long chatId, Pageable pageable) {
         var userDetail = getUserDetails();
         var userId = userDetail.orElse(new CurrentUserDetails()).getId();
+        var chatUserOpt = chatUserRepository.findFirstByChatIdAndUserIdAndDeletedAtIsNull(chatId, userId);
 
-        return new ResponseDto<>(new PageResponseDto<>(messageRepository.findAllByChatId(chatId, pageable)
-                .map(m ->
-                        new MessageDto.List(
-                                m.getId(),
-                                m.getChatUser().getChat().getId(),
-                                userMapper.toDto(m.getChatUser().getUser()),
-                                m.getContent(),
-                                m.getLabel(),
-                                m.getCreatedAt(),
-                                m.getUpdatedAt(),
-                                userId.equals(m.getChatUser().getUser().getId()),
-                                attachmentMapper.toDto(m.getAttachment())
-                        )
-                )));
+        if (chatUserOpt.isPresent()) {
+            return new ResponseDto<>(new PageResponseDto<>(messageRepository.findAllByChatId(chatId, pageable).map(m -> new MessageDto.List(m.getId(), m.getChatUser().getChat().getId(), userMapper.toDto(m.getChatUser().getUser()), m.getContent(), m.getLabel(), m.getCreatedAt(), m.getUpdatedAt(), userId.equals(m.getChatUser().getUser().getId()), attachmentMapper.toDto(m.getAttachment())))));
+        }
+
+        return new ResponseDto<>("Not authorized");
     }
 
 }

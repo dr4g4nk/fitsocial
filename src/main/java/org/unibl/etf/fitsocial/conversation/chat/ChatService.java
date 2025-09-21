@@ -1,7 +1,6 @@
 package org.unibl.etf.fitsocial.conversation.chat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
 import core.mapper.IMapper;
@@ -14,23 +13,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.unibl.etf.fitsocial.FirebaseNotificationService;
 import org.unibl.etf.fitsocial.auth.fcmtoken.FcmTokenRepository;
 import org.unibl.etf.fitsocial.auth.user.User;
 import org.unibl.etf.fitsocial.auth.user.UserDto;
 import org.unibl.etf.fitsocial.auth.user.UserRepository;
-import org.unibl.etf.fitsocial.conversation.attachment.Attachment;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentService;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUser;
 import org.unibl.etf.fitsocial.conversation.chatuser.ChatUserRepository;
-import org.unibl.etf.fitsocial.conversation.message.Message;
 import org.unibl.etf.fitsocial.conversation.message.MessageMapper;
 import org.unibl.etf.fitsocial.conversation.message.MessageRepository;
 import org.unibl.etf.fitsocial.conversation.message.projection.MessageWithChatId;
+import org.unibl.etf.fitsocial.notification.FirebaseNotificationService;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -128,13 +124,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
         try {
             var entity = mapper.fromCreateDto(dto);
             var usersId = new ArrayList<>(dto.userIds());
-            var isGroup = usersId.size() > 1;
-/*
-            if (entity.getSubject() == null || entity.getSubject().isBlank()) {
-                var name = userRepository.findAllByIdInAndDeletedAtIsNull(usersId).stream().map(isGroup ? User::getFirstName : user -> user.getFirstName() + " " + user.getLastName()).collect(Collectors.joining(", "));
-                entity.setSubject(name);
-            }
-*/
+
             var userDetails = getUserDetails();
             var currentUser = entityManager.getReference(User.class, userDetails.orElse(new CurrentUserDetails()).getId());
             entity.setCreatedBy(currentUser);
@@ -153,41 +143,7 @@ public class ChatService extends BaseSoftDeletableServiceImpl<Chat, ChatDto, Cha
             chatUser.setUser(currentUser);
             chatUserRepository.save(chatUser);
 
-            Attachment attachment;
-            if (dto.attachment() != null) {
-                var res = attachmentService.save(dto.attachment());
-                attachment = res.getEntity();
-            } else {
-                attachment = null;
-            }
-
-            var message = new Message();
-            if (attachment != null) message.setAttachment(attachment);
-            message.setContent(dto.content());
-            message.setChatUser(chatUser);
-            var dbMessage = messageRepository.saveAndFlush(message);
-
-            response = findById(dbEntity.getId());
-
-            var tokens = fcmTokenRepository.findAllByUserIdInLatest(dto.userIds());
-
-            var data = new HashMap<String, String>();
-            data.put("data", objectMapper.writeValueAsString(response.getResult()));
-            data.put("message", objectMapper.writeValueAsString(messageMapper.toDto(dbMessage)));
-            data.put("type", "chat");
-
-            tokens.forEach(t -> {
-                try {
-                    notificationService.sendNotificationAsync(
-                            t,
-                            null,
-                            null,
-                            null,
-                            data);
-                } catch (FirebaseMessagingException ignored) {
-                }
-            });
-
+            response = new ResponseDto<>(mapper.toDto(dbEntity), dbEntity);
 
         } catch (Exception ex) {
             response = new ResponseDto<>(ex.getMessage());

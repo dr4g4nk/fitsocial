@@ -95,7 +95,9 @@ public class UserService extends BaseSoftDeletableServiceImpl<User, UserDto, Use
     }
 
     public ResponseDto<PageResponseDto<UserDto.List>, User> findByValue(String value, Pageable pageable) {
-        var res = userRepository.findAllByTextFilter(value, pageable);
+        var userDetail = getUserDetails();
+        var currentId = userDetail.orElse(new CurrentUserDetails(-1L, "", "")).getId();
+        var res = userRepository.findAllByTextFilterWithoutCurrent(value, currentId, pageable);
 
         return new ResponseDto<>(new PageResponseDto<>(res.map(mapper::toListDto)));
     }

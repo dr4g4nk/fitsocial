@@ -10,15 +10,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.unibl.etf.fitsocial.conversation.attachment.AttachmentDto;
+import org.unibl.etf.fitsocial.conversation.message.MessageDto;
+import org.unibl.etf.fitsocial.conversation.message.MessageService;
 
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController extends BaseController<Chat, ChatDto, ChatDto.List, ChatDto.Update, ChatDto.Create, Long> {
     private final ChatService chatService;
+    private final MessageService messageService;
 
-    public ChatController(ChatService service) {
+    public ChatController(ChatService service, MessageService messageService) {
         super(service);
         this.chatService = service;
+        this.messageService = messageService;
     }
 
     @GetMapping("/filter")
@@ -39,8 +43,16 @@ public class ChatController extends BaseController<Chat, ChatDto, ChatDto.List, 
                 attachemnt = new AttachmentDto.Create(file.getOriginalFilename(), file.getContentType(), file);
             }
 
-            var response = service.save(new ChatDto.Create(dto.subject(), dto.userIds(), dto.content(), attachemnt));
-            if (response.isSuccess()) return ResponseEntity.ok(response);
+            var response = chatService.save(new ChatDto.Create(dto.subject(), dto.userIds(), dto.content(), attachemnt));
+            if (response.isSuccess()){
+                var chat = response.getEntity();
+
+                if(attachemnt != null || (dto.content() != null && !dto.content().isEmpty()))
+                     messageService.save(new MessageDto.Create(chat.getId(), dto.content(), attachemnt));
+
+                response = chatService.findById(chat.getId());
+                return ResponseEntity.ok(response);
+            }
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(e.getMessage()));

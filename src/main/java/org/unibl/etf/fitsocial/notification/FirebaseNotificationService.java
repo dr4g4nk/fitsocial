@@ -1,9 +1,6 @@
-package org.unibl.etf.fitsocial;
+package org.unibl.etf.fitsocial.notification;
 
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.annotation.Backoff;
@@ -33,20 +30,19 @@ public class FirebaseNotificationService {
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000, multiplier = 2)
     )
-    public void sendNotificationAsync(String targetToken, String title, String body, String imageUrl, Map<String, String> data) throws FirebaseMessagingException {
-
-        var notificationBuilder = Notification.builder()
-                .setTitle(title)
-                .setBody(body);
-        if (imageUrl != null && !imageUrl.isBlank())
-            notificationBuilder.setImage(imageUrl);
+    public void sendNotificationAsync(String targetToken, Map<String, String> notifikationData, ApnsConfig apnsConfig, AndroidConfig androidConfig) throws FirebaseMessagingException {
 
         var builder = Message.builder()
-                .setToken(targetToken)
-                .setNotification(notificationBuilder.build());
+                .setToken(targetToken);
 
-        if (data != null && !data.isEmpty()) {
-            builder = builder.putAllData(data);
+
+        if(apnsConfig != null)
+            builder.setApnsConfig(apnsConfig);
+        if(androidConfig != null)
+            builder.setAndroidConfig(androidConfig);
+
+        if (notifikationData != null && !notifikationData.isEmpty()) {
+            builder = builder.putAllData(notifikationData);
         }
 
         var msg = builder.build();
