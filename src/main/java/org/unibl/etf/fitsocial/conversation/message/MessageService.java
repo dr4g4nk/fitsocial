@@ -1,6 +1,8 @@
 package org.unibl.etf.fitsocial.conversation.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.ErrorCode;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import core.dto.PageResponseDto;
 import core.dto.ResponseDto;
@@ -24,6 +26,7 @@ import org.unibl.etf.fitsocial.notification.FcmConfigs;
 import org.unibl.etf.fitsocial.notification.FirebaseNotificationService;
 import org.unibl.etf.fitsocial.notification.NotifikationData;
 
+import java.io.Console;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -137,16 +140,18 @@ public class MessageService extends BaseSoftDeletableServiceImpl<Message, Messag
 
                 var notificationData = new NotifikationData(null, null, null, data);
                 var apnsConfig = FcmConfigs.buildApnsAlertConfig(finalSubject, body, "chat_messages", finalMessageDto.chatId().toString(), true, null, null, imageUrl, null);
-                var androidConfig = FcmConfigs.buildAndroidAlertConfig(finalSubject, body, "chat_channel", finalMessageDto.chatId().toString(), 86400000, "OPEN_CHAT", imageUrl);
+                var androidConfig = FcmConfigs.buildAndroidAlertConfig(finalSubject, body, "chat_channel", finalMessageDto.chatId().toString(), 86400000, "OPEN_CHAT", AndroidNotification.Priority.HIGH,imageUrl);
                 var androidDataOnlyConfig = FcmConfigs.buildAndroidDataOnlyConfig(86400000, finalMessageDto.chatId().toString());
                 tokens.forEach(t -> {
                     try {
                         notificationService.sendNotificationAsync(t, data,
                                 apnsConfig,
-                                androidDataOnlyConfig
+                                androidConfig
                         );
                     } catch (FirebaseMessagingException e) {
                         e.printStackTrace();
+                        if(e.getErrorCode() == ErrorCode.UNAUTHENTICATED  || e.getErrorCode() == ErrorCode.NOT_FOUND)
+                            fcmTokenRepository.deleteByToken(t);
                     }
                 });
 

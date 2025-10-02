@@ -31,11 +31,10 @@ public final class FcmConfigs {
             Map<String, Object> extraApsData
     ) {
         Aps.Builder aps = Aps.builder()
-                .setAlert(ApsAlert.builder().build()) // title/body dolaze iz Notification ili iz data; ovdje ostavljamo prazno
                 .setSound(sound == null ? "default" : sound)
                 .setAlert(ApsAlert.builder().setTitle(title).setBody(body).build())
-                .setMutableContent(true)              // obavezno za rich media kroz NSE
-                .setContentAvailable(contentAvailable)           // ovo je alert, ne background
+                .setMutableContent(true)
+                .setContentAvailable(contentAvailable)
                 .setCategory(category)
                 .setThreadId(threadId);
 
@@ -95,6 +94,7 @@ public final class FcmConfigs {
             String collapseKey,
             long ttlSeconds,
             String clickAction,
+            AndroidNotification.Priority priority,
             String imageUrl
     ) {
         AndroidNotification.Builder notif = AndroidNotification.builder()
@@ -102,7 +102,7 @@ public final class FcmConfigs {
                 .setTitle(title)
                 .setBody(body)
                 .setClickAction(clickAction)
-                .setPriority(AndroidNotification.Priority.HIGH)
+                .setPriority(priority)
                 .setDefaultVibrateTimings(true)
                 .setDefaultSound(true);
 

@@ -24,18 +24,16 @@ public class FirebaseNotificationService {
     /**
      * Asinkrono šalje FCM poruku i retry-a do 3 puta na FirebaseMessagingException.
      */
-    @Async("fcmExecutor")
+   /* @Async("fcmExecutor")
     @Retryable(
             value = FirebaseMessagingException.class,
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000, multiplier = 2)
-    )
+    )*/
     public void sendNotificationAsync(String targetToken, Map<String, String> notifikationData, ApnsConfig apnsConfig, AndroidConfig androidConfig) throws FirebaseMessagingException {
 
         var builder = Message.builder()
                 .setToken(targetToken);
-
-
         if(apnsConfig != null)
             builder.setApnsConfig(apnsConfig);
         if(androidConfig != null)
