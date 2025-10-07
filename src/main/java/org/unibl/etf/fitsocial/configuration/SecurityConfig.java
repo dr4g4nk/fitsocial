@@ -35,7 +35,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/auth/**", "/public/**", "/api/post/media/*/stream", "/api/attachment/*/stream").permitAll()
+                        .requestMatchers("/auth/**", "/public/**", "/api/post/media/*/stream", "/api/attachment/*/stream", "/api/user/*/avatar").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
