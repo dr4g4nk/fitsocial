@@ -30,7 +30,7 @@ public class Post extends SoftDeletableEntity{
     @JoinColumn(name = "user_id", nullable = false)
     @SQLRestriction("deleted_at IS NULL")
     private User user;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activity_id")
     @SQLRestriction("deleted_at IS NULL")
     private Activity activity;
